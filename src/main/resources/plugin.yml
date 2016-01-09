@@ -1,0 +1,4 @@
+name: BubbleBungee
+authors: ["ExtendObject"]
+version: 1.0
+main: com.thebubblenetwork.bubblebungee.BubbleBungee
