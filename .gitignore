@@ -48,3 +48,6 @@ Temporary Items
 *.xml
 .idea/*.*
 *.iml
+target/*
+*.MF
+*.jar
