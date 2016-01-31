@@ -1,13 +1,33 @@
 package com.thebubblenetwork.bubblebungee;
 
-import com.thebubblenetwork.bubblebungee.file.PropertiesFile;
+import com.google.common.collect.ImmutableMap;
+import com.thebubblenetwork.api.global.data.DataObject;
+import com.thebubblenetwork.api.global.data.PlayerData;
+import com.thebubblenetwork.api.global.plugin.BubbleHubObject;
+import com.thebubblenetwork.api.global.ranks.Rank;
+import com.thebubblenetwork.api.global.sql.SQLConnection;
+import com.thebubblenetwork.api.global.sql.SQLUtil;
+import com.thebubblenetwork.api.global.type.ServerTypeObject;
 import com.thebubblenetwork.bubblebungee.servermanager.ServerManager;
-import com.thebubblenetwork.bubblebungee.sql.SQLConnection;
-import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.config.ServerInfo;
+import de.mickare.xserver.AbstractXServerManager;
+import de.mickare.xserver.BungeeXServerManager;
+import de.mickare.xserver.BungeeXServerPlugin;
+import de.mickare.xserver.XServerManager;
+import de.mickare.xserver.exceptions.NotInitializedException;
+import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
+import net.md_5.bungee.config.Configuration;
+import net.md_5.bungee.config.YamlConfiguration;
 
 import java.io.File;
+import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 /**
  * The Bubble Network 2016
@@ -16,10 +36,9 @@ import java.io.File;
  * Created January 2016
  */
 
-public class BubbleBungee extends Plugin implements IBubbleBungee{
+public class BubbleBungee extends BubbleHubObject<Plugin,ProxiedPlayer> implements IBubbleBungee{
 
     private static IBubbleBungee instance;
-    private static final File propertiesfilepath = new File("bubblebungee.properties");
 
     public static IBubbleBungee getInstance() {
         return instance;
@@ -30,98 +49,143 @@ public class BubbleBungee extends Plugin implements IBubbleBungee{
     }
 
     private ServerManager manager;
-    private PropertiesFile file;
-    private String db_ip,db_port,db_usr,db_pass,db_name;
-    private SQLConnection connection;
+    private P plugin;
 
-    public void onEnable(){
+    public BubbleBungee(P plugin){
+        super();
+        this.plugin = plugin;
+    }
+
+    public void onBubbleEnable(){
         setInstance(this);
-        if(!propertiesfilepath.exists()){
-            try {
-                PropertiesFile.generateFresh(propertiesfilepath,new String[]{
-                        "database-ip","database-port","database-user","database-password","database-name"
-                },new String[]{
-                        "localhost","3306","NONE","root","bubbleserver"
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            getProxy().stop("Properties File not found");
-            return;
-        }
         try {
-            file = new PropertiesFile(propertiesfilepath);
+            loadRanks();
         } catch (Exception e) {
-            getProxy().stop("Properties error in loading");
-            return;
+            logSevere(e.getMessage());
+            endSetup("Failed to setup map");
         }
-        db_ip = file.getString("database-ip");
-        db_port = file.getString("database-port");
-        db_usr = file.getString("database-user");
-        db_pass = file.getString("database-password");
-        if(db_pass.equals("NONE"))db_pass = null;
-        db_name = file.getString("database-name");
-        if(db_ip == null || db_port == null|| db_usr == null || db_name == null){
-            getProxy().stop("Properties error");
-            return;
-        }
-        connection = new SQLConnection(getDatabaseAddress(),getDatabasePort(),getDatabaseName(),getDatabaseUser(),getDatabasePassword());
-        try{
-            connection.openConnection();
-        }
-        catch (Exception ex){
-            ex.printStackTrace();
-            getProxy().stop("SQL Connection could not be established");
-            return;
-        }
-        manager = new ServerManager(this);
-        for(ServerInfo info:ProxyServer.getInstance().getServers().values()){
-            getManager().load(info);
+        ServerTypeObject.getTypes().clear();
+        try {
+            manager = new ServerManager(this);
+        } catch (Exception e) {
+            //Automatic Catch Statement
+
         }
     }
 
-    public void onDisable(){
+    public void onBubbleDisable(){
         setInstance(null);
         manager = null;
+    }
+
+
+
+    public PlayerData loadData(UUID load) throws SQLException, ClassNotFoundException {
+        return new PlayerData(DataObject.loadData(SQLUtil.query(getConnection(), PlayerData.table, "*",
+                new SQLUtil.WhereVar("uuid", load))));
     }
 
     public ServerManager getManager(){
         return manager;
     }
 
-    public PropertiesFile getProperties(){
-        return file;
+    public P getPlugin(){
+        return plugin;
     }
 
-    public SQLConnection getConnection(){
-        return connection;
+    public void saveXServerDefaults() {
+        File xserverfoler = new File("plugins" + File.separator + "XServerProxy");
+        if(!xserverfoler.exists())endSetup("Could not find XServer folder");
+        File xserverconfig = new File(xserverfoler + File.separator + "config.yml");
+        if(!xserverconfig.exists())endSetup("Could not find XServer config");
+        Configuration c;
+        try {
+            c = YamlConfiguration.getProvider(YamlConfiguration.class).load(xserverconfig);
+        } catch (IOException e) {
+            logSevere(e.getMessage());
+            endSetup("Could not load XServer config");
+            return;
+        }
+        c.set("servername","proxy");
+        c.set("mysql.User",getConnection().getUser());
+        c.set("mysql.Pass",getConnection().getPassword());
+        c.set("mysql.Data",getConnection().getDatabase());
+        c.set("mysql.Host",getConnection().getHostname());
+        c.set("mysql.Port",getConnection().getPort());
+        c.set("mysql.TableXServers", "xserver_servers");
+        c.set("mysql.TableXGroups", "xserver_groups");
+        c.set("mysql.TableXServersGroups", "xserver_servergroups");
+
+        try {
+            YamlConfiguration.getProvider(YamlConfiguration.class).save(c,xserverconfig);
+        } catch (IOException e) {
+            logSevere(e.getMessage());
+            endSetup("Could not save XServer config");
+        }
     }
 
-    public String getVersion(){
-        return getDescription().getVersion();
+    public void onBubbleLoad() {
+
     }
 
-    public BubbleBungee getPlugin(){
-        return this;
+    public ProxiedPlayer getPlayer(UUID uuid) {
+        return getPlugin().getProxy().getPlayer(uuid);
     }
 
-    public String getDatabaseName() {
-        return db_name;
+    public void endSetup(String s) throws RuntimeException {
+        getPlugin().getProxy().stop(s);
+        throw new RuntimeException(s);
     }
 
-    public String getDatabaseAddress() {
-        return db_ip;
+    public void logInfo(String s) {
+        Logger l = getPlugin().getLogger();
+        if(l != null)l.info(s);
+        else System.out.println(s);
     }
 
-    public String getDatabasePort() {
-        return db_port;
+    public void logSevere(String s) {
+        Logger l = getPlugin().getLogger();
+        if(l != null)l.severe(s);
+        else System.err.println(s);
     }
 
-    public String getDatabaseUser() {
-        return db_usr;
+    public void runTaskLater(Runnable runnable,long l,TimeUnit unit) {
+        getPlugin().getProxy().getScheduler().schedule(getPlugin(),runnable,l,unit);
     }
 
-    public String getDatabasePassword() {
-        return db_pass;
+    public void loadRanks() throws SQLException, ClassNotFoundException {
+        Rank.getRanks().clear();
+        ResultSet set = SQLUtil.query(BubbleHubObject.getInstance().getConnection(), "ranks", "*", new SQLUtil.Where("1"));
+        Map<String, Map> map = new HashMap<>();
+        while (set.next()) {
+            String rankname = set.getString("rank");
+            Map currentmap = map.containsKey(rankname) ? map.get(rankname) : new HashMap();
+            currentmap.put(set.getObject("key"), set.getObject("value"));
+            map.put(rankname, currentmap);
+        }
+        set.close();
+        for (Map.Entry<String, Map> entry : map.entrySet()) {
+            Rank.loadRank(entry.getKey(),entry.getValue());
+        }
+    }
+
+    public AbstractXServerManager getXManager() {
+        try {
+            return BungeeXServerManager.getInstance();
+        } catch (NotInitializedException e) {
+            logSevere("Could not get instance, retrying");
+        }
+        BungeeXServerPlugin plugin = (BungeeXServerPlugin)getPlugin().getProxy().getPluginManager().getPlugin("XServerProxy");
+        XServerManager manager = null;
+        try{
+            manager = plugin.getManager();
+        }
+        catch (Exception ex){
+            logSevere("Could not find XServer");
+            endSetup("Could not get XServer");
+        }
+        if(manager != null)return manager;
+        endSetup("Could not find XServer instance");
+        throw new RuntimeException();
     }
 }

@@ -1,12 +1,11 @@
 package com.thebubblenetwork.bubblebungee.servermanager;
 
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
+import com.thebubblenetwork.api.global.type.ServerType;
 import com.thebubblenetwork.bubblebungee.BubbleBungee;
+import de.mickare.xserver.net.XServer;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.config.ServerInfo;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.net.InetSocketAddress;
 
 /**
@@ -16,39 +15,47 @@ import java.net.InetSocketAddress;
  * Created January 2016
  */
 public class BubbleServer{
-    protected static BubbleServer create(String name, InetSocketAddress address,String motd){
+    protected static BubbleServer create(XServer xserver,String name, InetSocketAddress address,String motd){
         ServerInfo info = ProxyServer.getInstance().constructServerInfo(name,address,motd,false);
-        BubbleServer server =  new BubbleServer(info);
+        BubbleServer server =  new BubbleServer(info,xserver);
+        ProxyServer.getInstance().getServers().put(name,info);
+        BubbleBungee.getInstance().getManager().register(server);
+        return server;
+    }
+
+    protected static BubbleServer create(XServer xserver, InetSocketAddress address, ServerType wrapper, int id){
+        String name = wrapper.getPrefix() + String.valueOf(id);
+        ServerInfo info = ProxyServer.getInstance().constructServerInfo(name,address,"",false);
+        BubbleServer server =  new BubbleServer(info,xserver,wrapper,id);
         ProxyServer.getInstance().getServers().put(name,info);
         BubbleBungee.getInstance().getManager().register(server);
         return server;
     }
 
     private ServerInfo info;
-    private int playercount = 0,maxplayercount = 0,minplayercount = 0;
+    private XServer server;
+    private int playercount = 0;
     private int id;
-    private ServerTypeWrapper type;
+    private ServerType type;
 
-    protected BubbleServer(ServerInfo info){
+    private BubbleServer(ServerInfo info,XServer server,ServerType wrapper,int id){
+        this.id = id;
         this.info = info;
+        type = wrapper;
+        this.server = server;
+    }
+
+    protected BubbleServer(ServerInfo info,XServer server){
+        this.info = info;
+        this.server = server;
         try{
-            type = ServerType.getType(getInfo());
-            id = ServerType.getID(getInfo(),type);
+            type = BubbleBungee.getInstance().getManager().getType(getInfo());
+            id = BubbleBungee.getInstance().getManager().getID(getInfo(),type);
         }
         catch (Exception ex){
             ex.printStackTrace();
             remove();
-            return;
         }
-        ByteOutputStream stream = new ByteOutputStream();
-        DataOutputStream out = new DataOutputStream(stream);
-        try {
-            out.writeUTF("Assign");
-            out.write(getId());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        getInfo().sendData("BubbleServer",stream.getBytes());
     }
 
     public String getName() {
@@ -66,20 +73,8 @@ public class BubbleServer{
         }
     }
 
-    public int getMinplayercount() {
-        return minplayercount;
-    }
-
-    public void setMinplayercount(int minplayercount) {
-        this.minplayercount = minplayercount;
-    }
-
     public int getMaxplayercount() {
-        return maxplayercount;
-    }
-
-    public void setMaxplayercount(int maxplayercount) {
-        this.maxplayercount = maxplayercount;
+        return getType().getMaxPlayers();
     }
 
     public int getPlayercount() {
@@ -90,18 +85,11 @@ public class BubbleServer{
         this.playercount = playercount;
     }
 
-    public void setInfo(ServerInfo info) {
+    protected void setInfo(ServerInfo info) throws Exception{
+        if(info.getAddress() != getInfo().getAddress())throw new Exception("Address may not change");
         if(info.getName().equalsIgnoreCase(getName())){
             this.info = info;
             ProxyServer.getInstance().getServers().put(getName(),getInfo());
-            try{
-                type = ServerType.getType(getInfo());
-                id = ServerType.getID(getInfo(),type);
-            }
-            catch (Exception ex){
-                ex.printStackTrace();
-                remove();
-            }
         }
     }
 
@@ -109,16 +97,22 @@ public class BubbleServer{
         return id;
     }
 
-    public void setId(int id){
+    public void setId(int id) throws Exception{
+        this.id = id;
         setInfo(ProxyServer.getInstance().constructServerInfo(getType().getPrefix() + String.valueOf(id),getInfo().getAddress(),getInfo().getMotd(),false));
     }
 
-    public ServerTypeWrapper getType(){
+    public ServerType getType(){
         return type;
     }
 
-    public void setType(ServerTypeWrapper type){
+    public void setType(ServerType type) throws Exception{
+        this.type = type;
         setInfo(ProxyServer.getInstance().constructServerInfo(type.getPrefix() + String.valueOf(getId()),getInfo().getAddress(),getInfo().getMotd(),false));
+    }
+
+    public XServer getServer(){
+        return server;
     }
 
     @Override
