@@ -1,11 +1,9 @@
 package com.thebubblenetwork.bubblebungee;
 
-import com.google.common.collect.ImmutableMap;
 import com.thebubblenetwork.api.global.data.DataObject;
 import com.thebubblenetwork.api.global.data.PlayerData;
 import com.thebubblenetwork.api.global.plugin.BubbleHubObject;
 import com.thebubblenetwork.api.global.ranks.Rank;
-import com.thebubblenetwork.api.global.sql.SQLConnection;
 import com.thebubblenetwork.api.global.sql.SQLUtil;
 import com.thebubblenetwork.api.global.type.ServerTypeObject;
 import com.thebubblenetwork.bubblebungee.servermanager.ServerManager;
@@ -13,7 +11,6 @@ import de.mickare.xserver.AbstractXServerManager;
 import de.mickare.xserver.BungeeXServerManager;
 import de.mickare.xserver.BungeeXServerPlugin;
 import de.mickare.xserver.XServerManager;
-import de.mickare.xserver.exceptions.NotInitializedException;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
@@ -172,7 +169,7 @@ public class BubbleBungee extends BubbleHubObject<Plugin,ProxiedPlayer> implemen
     public AbstractXServerManager getXManager() {
         try {
             return BungeeXServerManager.getInstance();
-        } catch (NotInitializedException e) {
+        } catch (Exception e) {
             logSevere("Could not get instance, retrying");
         }
         BungeeXServerPlugin plugin = (BungeeXServerPlugin)getPlugin().getProxy().getPluginManager().getPlugin("XServerProxy");
