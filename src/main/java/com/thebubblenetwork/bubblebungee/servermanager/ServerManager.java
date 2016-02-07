@@ -80,6 +80,11 @@ public class ServerManager {
     }
 
     public ServerType getNeeded(){
+        try {
+            return ServerTypeObject.getType("Lobby");
+        } catch (Exception e) {
+            getBungee().logSevere(e.getMessage());
+        }
         return null;
     }
 

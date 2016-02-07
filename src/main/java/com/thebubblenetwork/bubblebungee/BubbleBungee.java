@@ -7,10 +7,8 @@ import com.thebubblenetwork.api.global.ranks.Rank;
 import com.thebubblenetwork.api.global.sql.SQLUtil;
 import com.thebubblenetwork.api.global.type.ServerTypeObject;
 import com.thebubblenetwork.bubblebungee.servermanager.ServerManager;
-import de.mickare.xserver.AbstractXServerManager;
-import de.mickare.xserver.BungeeXServerManager;
-import de.mickare.xserver.BungeeXServerPlugin;
-import de.mickare.xserver.XServerManager;
+import de.mickare.xserver.XServerPlugin;
+import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
@@ -46,6 +44,7 @@ public class BubbleBungee extends BubbleHubObject<Plugin,ProxiedPlayer> implemen
     }
 
     private ServerManager manager;
+    private BubbleListener listener;
     private P plugin;
 
     public BubbleBungee(P plugin){
@@ -55,19 +54,27 @@ public class BubbleBungee extends BubbleHubObject<Plugin,ProxiedPlayer> implemen
 
     public void onBubbleEnable(){
         setInstance(this);
+
+        logInfo("Loading ranks...");
+
         try {
             loadRanks();
         } catch (Exception e) {
             logSevere(e.getMessage());
             endSetup("Failed to setup map");
         }
-        ServerTypeObject.getTypes().clear();
-        try {
-            manager = new ServerManager(this);
-        } catch (Exception e) {
-            //Automatic Catch Statement
 
-        }
+        logInfo("Loaded ranks");
+
+
+        logInfo("Setting up components");
+
+        manager = new ServerManager(this);
+        listener = new BubbleListener(this);
+        getPacketHub().registerListener(listener);
+        getPlugin().getProxy().getPluginManager().registerListener(getPlugin(),listener);
+
+        logInfo("Finished setup");
     }
 
     public void onBubbleDisable(){
@@ -91,10 +98,30 @@ public class BubbleBungee extends BubbleHubObject<Plugin,ProxiedPlayer> implemen
     }
 
     public void saveXServerDefaults() {
+
+        logInfo("Finding XServer folders...");
+
         File xserverfoler = new File("plugins" + File.separator + "XServerProxy");
-        if(!xserverfoler.exists())endSetup("Could not find XServer folder");
+        if(!xserverfoler.exists()){
+            logInfo("Creating XServer folder");
+            xserverfoler.mkdir();
+        }
+
+        logInfo("Finding XServer configuration...");
+
         File xserverconfig = new File(xserverfoler + File.separator + "config.yml");
-        if(!xserverconfig.exists())endSetup("Could not find XServer config");
+        if(!xserverconfig.exists()){
+            try{
+                xserverconfig.createNewFile();
+            }
+            catch (IOException ex){
+                logSevere(ex.getMessage());
+                endSetup("Could not create XServer configuration");
+            }
+        }
+
+        logInfo("Loading XServer configuration");
+
         Configuration c;
         try {
             c = YamlConfiguration.getProvider(YamlConfiguration.class).load(xserverconfig);
@@ -113,12 +140,18 @@ public class BubbleBungee extends BubbleHubObject<Plugin,ProxiedPlayer> implemen
         c.set("mysql.TableXGroups", "xserver_groups");
         c.set("mysql.TableXServersGroups", "xserver_servergroups");
 
+        logInfo("Loaded XServer configuration");
+
+        logInfo("Saving XServer configuration");
+
         try {
             YamlConfiguration.getProvider(YamlConfiguration.class).save(c,xserverconfig);
         } catch (IOException e) {
             logSevere(e.getMessage());
             endSetup("Could not save XServer config");
         }
+
+        logInfo("Saved XServer configuration");
     }
 
     public void onBubbleLoad() {
@@ -134,16 +167,21 @@ public class BubbleBungee extends BubbleHubObject<Plugin,ProxiedPlayer> implemen
         throw new RuntimeException(s);
     }
 
+    public Logger getLogger(){
+        if(getPlugin() != null)return getPlugin().getLogger();
+        return null;
+    }
+
     public void logInfo(String s) {
-        Logger l = getPlugin().getLogger();
+        Logger l = getLogger();
         if(l != null)l.info(s);
-        else System.out.println(s);
+        else System.out.println("[BubbleBungee] " + s);
     }
 
     public void logSevere(String s) {
-        Logger l = getPlugin().getLogger();
+        Logger l = getLogger();
         if(l != null)l.severe(s);
-        else System.err.println(s);
+        else System.err.println("[BubbleBungee] " + s);
     }
 
     public void runTaskLater(Runnable runnable,long l,TimeUnit unit) {
@@ -166,23 +204,13 @@ public class BubbleBungee extends BubbleHubObject<Plugin,ProxiedPlayer> implemen
         }
     }
 
-    public AbstractXServerManager getXManager() {
-        try {
-            return BungeeXServerManager.getInstance();
-        } catch (Exception e) {
-            logSevere("Could not get instance, retrying");
-        }
-        BungeeXServerPlugin plugin = (BungeeXServerPlugin)getPlugin().getProxy().getPluginManager().getPlugin("XServerProxy");
-        XServerManager manager = null;
-        try{
-            manager = plugin.getManager();
-        }
-        catch (Exception ex){
-            logSevere("Could not find XServer");
-            endSetup("Could not get XServer");
-        }
-        if(manager != null)return manager;
-        endSetup("Could not find XServer instance");
-        throw new RuntimeException();
+    public XServerPlugin getXPlugin() {
+        Plugin p = getPlugin().getProxy().getPluginManager().getPlugin("XServerProxy");
+        if(p == null)endSetup("Could not find XServerProxy");
+        return (XServerPlugin) p;
+    }
+
+    public boolean bungee(){
+        return true;
     }
 }

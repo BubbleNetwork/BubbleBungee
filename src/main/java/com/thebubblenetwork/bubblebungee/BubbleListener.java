@@ -9,6 +9,7 @@ import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshak
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.request.PlayerDataRequest;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.PlayerDataResponse;
 import com.thebubblenetwork.api.global.player.BubblePlayer;
+import com.thebubblenetwork.api.global.plugin.BubbleHubObject;
 import com.thebubblenetwork.api.global.ranks.Rank;
 import com.thebubblenetwork.api.global.type.ServerType;
 import com.thebubblenetwork.bubblebungee.player.ProxiedBubblePlayer;
@@ -31,6 +32,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The Bubble Network 2016
@@ -161,11 +163,16 @@ public class BubbleListener implements Listener,PacketListener{
         getBungee().logInfo("Server - " + info.getServer().getHost() + " - Disconnected");
     }
 
-    public void sendPacketSafe(XServer server,IPluginMessage message){
-        try {
-            getBungee().getPacketHub().sendMessage(server,message);
-        } catch (IOException e) {
-            getBungee().logSevere(e.getMessage());
-        }
+    public void sendPacketSafe(final XServer server,final IPluginMessage message){
+        ((BubbleHubObject)getBungee()).runTaskLater(new Runnable(){
+            @Override
+            public void run() {
+                try {
+                    getBungee().getPacketHub().sendMessage(server,message);
+                } catch (IOException e) {
+                    getBungee().logSevere(e.getMessage());
+                }
+            }
+        },1L, TimeUnit.MILLISECONDS);
     }
 }
