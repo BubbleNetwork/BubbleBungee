@@ -59,7 +59,7 @@ public class ServerManager {
     }
 
     public BubbleServer create(XServer server,ServerType wrapper,int id){
-        InetSocketAddress address = new InetSocketAddress(server.getHost(),server.getPort());
+        InetSocketAddress address = new InetSocketAddress(server.getHost(),Integer.parseInt(server.getName())+10000);
         return BubbleServer.create(server,address,wrapper,id);
     }
 

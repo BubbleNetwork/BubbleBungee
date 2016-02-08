@@ -1,5 +1,6 @@
 package com.thebubblenetwork.bubblebungee;
 
+import com.thebubblenetwork.api.global.data.PlayerData;
 import com.thebubblenetwork.api.global.plugin.BubbleHub;
 import com.thebubblenetwork.bubblebungee.servermanager.ServerManager;
 import net.md_5.bungee.api.ProxyServer;
@@ -8,6 +9,8 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginDescription;
 
 import java.io.File;
+import java.sql.SQLException;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 /**
@@ -20,4 +23,5 @@ import java.util.logging.Logger;
 public interface IBubbleBungee extends BubbleHub<Plugin,ProxiedPlayer> {
     ServerManager getManager();
     P getPlugin();
+    PlayerData loadData(UUID load) throws SQLException, ClassNotFoundException;
 }

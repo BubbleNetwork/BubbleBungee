@@ -25,11 +25,39 @@ import java.util.UUID;
 
 public class ProxiedBubblePlayer extends BubblePlayerObject<ProxiedPlayer> implements BubblePlayer<ProxiedPlayer>{
 
-    public static BubblePlayer<ProxiedPlayer> getObject(UUID u){
-        return (BubblePlayer<ProxiedPlayer>) getPlayerObjectMap().get(u);
+    public static ProxiedBubblePlayer getObject(UUID u){
+        return (ProxiedBubblePlayer) getPlayerObjectMap().get(u);
+    }
+
+    public static ProxiedBubblePlayer getObject(String name){
+        for(BubblePlayer player:getPlayerObjectMap().values()){
+            if(player instanceof ProxiedBubblePlayer){
+                ProxiedBubblePlayer proxiedBubblePlayer = (ProxiedBubblePlayer)player;
+                try{
+                    if(proxiedBubblePlayer.getName().equalsIgnoreCase(name))return proxiedBubblePlayer;
+                }
+                catch (UnsupportedOperationException ex){
+                }
+            }
+        }
+        return null;
     }
 
     public ProxiedBubblePlayer(UUID u, PlayerData data) {
         super(u, data);
+    }
+
+    private String name;
+
+    public void setName(String name){
+        this.name = name;
+    }
+
+    public String getName(){
+        if(name == null){
+            if(getPlayer() != null)setName(getPlayer().getName());
+            else throw new UnsupportedOperationException("Name is not set");
+        }
+        return name;
     }
 }

@@ -8,6 +8,7 @@ import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshak
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshake.RankDataUpdate;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.request.PlayerDataRequest;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.PlayerDataResponse;
+import com.thebubblenetwork.api.global.data.PlayerData;
 import com.thebubblenetwork.api.global.player.BubblePlayer;
 import com.thebubblenetwork.api.global.plugin.BubbleHubObject;
 import com.thebubblenetwork.api.global.ranks.Rank;
@@ -20,15 +21,13 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.md_5.bungee.api.event.PermissionCheckEvent;
-import net.md_5.bungee.api.event.PostLoginEvent;
-import net.md_5.bungee.api.event.PreLoginEvent;
-import net.md_5.bungee.api.event.ProxyPingEvent;
+import net.md_5.bungee.api.event.*;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -71,6 +70,23 @@ public class BubbleListener implements Listener,PacketListener{
         else e.setHasPermission(true);
     }
 
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerJoin(PreLoginEvent e){
+        if(e.isCancelled())return;
+        PendingConnection connection = e.getConnection();
+        try {
+            PlayerData data = getBungee().loadData(connection.getUniqueId());
+            ProxiedBubblePlayer player = new ProxiedBubblePlayer(connection.getUniqueId(),data);
+            player.setName(connection.getName());
+            ProxiedBubblePlayer.getPlayerObjectMap().put(connection.getUniqueId(),player);
+            getBungee().logInfo("Loaded data: " + connection.getName());
+        } catch (SQLException|ClassNotFoundException e1) {
+            getBungee().logSevere(e1.getMessage());
+            e.setCancelled(true);
+            e.setCancelReason(ChatColor.RED + "Woops WIP!");
+        }
+    }
+
     @EventHandler
     public void onPing(ProxyPingEvent e){
         PendingConnection connection = e.getConnection();
@@ -99,29 +115,24 @@ public class BubbleListener implements Listener,PacketListener{
         e.setResponse(ping);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPreJoin(PreLoginEvent e){
-        e.setCancelled(false);
-    }
-
     @EventHandler
     public void onPostJoin(PostLoginEvent e){
         ProxiedPlayer p = e.getPlayer();
-        p.connect(getBungee().getManager().getServer("Lobby1").getInfo());
-        p.setReconnectServer(getBungee().getManager().getServer("Lobby1").getInfo());
+        p.connect(getBungee().getManager().getServer("L1").getInfo());
+        p.setReconnectServer(getBungee().getManager().getServer("L1").getInfo());
     }
 
     public void onMessage(PacketInfo info, IPluginMessage message) {
         if(message instanceof PlayerDataRequest){
             XServer server = info.getServer();
             PlayerDataRequest rq = (PlayerDataRequest) message;
-            BubblePlayer<ProxiedPlayer> player = ProxiedBubblePlayer.getObject(rq.getUUID());
+            ProxiedBubblePlayer player = ProxiedBubblePlayer.getObject(rq.getName());
             if(player != null) {
-                PlayerDataResponse response = new PlayerDataResponse(rq.getUUID(), player.getData().getRaw());
+                PlayerDataResponse response = new PlayerDataResponse(rq.getName(), player.getData().getRaw());
                 sendPacketSafe(server,response);
                 getBungee().logInfo("Sent player data request to " + server.getHost());
             }
-            else getBungee().logSevere("Received request without player on bungee " + rq.getUUID() + " (" + server.getName() + ")");
+            else getBungee().logSevere("Received request without player on bungee " + rq.getName() + " (" + server.getName() + ")");
         }
         else if(message instanceof AssignMessage){
             AssignMessage assignMessage = (AssignMessage)message;
@@ -141,8 +152,11 @@ public class BubbleListener implements Listener,PacketListener{
         }
         else if(message instanceof PlayerDataResponse){
             PlayerDataResponse response = (PlayerDataResponse)message;
-            BubblePlayer<ProxiedPlayer> player = ProxiedBubblePlayer.getObject(response.getUUID());
-            player.setData(response.getData());
+            BubblePlayer<ProxiedPlayer> player = ProxiedBubblePlayer.getObject(response.getName());
+            if(player != null) {
+                player.setData(response.getData());
+            }
+            else getBungee().logSevere("Received response without player on bungee " + response.getName() + " (" + info.getServer().getName() +")");
         }
         else{
             getBungee().logSevere("Could not accept packet - " + message.getType().getName());
