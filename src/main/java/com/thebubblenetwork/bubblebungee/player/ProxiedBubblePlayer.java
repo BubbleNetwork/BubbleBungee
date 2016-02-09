@@ -5,6 +5,8 @@ import com.thebubblenetwork.api.global.player.BubblePlayer;
 import com.thebubblenetwork.api.global.player.BubblePlayerObject;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**

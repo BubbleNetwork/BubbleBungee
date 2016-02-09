@@ -2,6 +2,7 @@ package com.thebubblenetwork.bubblebungee;
 
 import com.thebubblenetwork.api.global.data.DataObject;
 import com.thebubblenetwork.api.global.data.PlayerData;
+import com.thebubblenetwork.api.global.data.RankData;
 import com.thebubblenetwork.api.global.plugin.BubbleHubObject;
 import com.thebubblenetwork.api.global.ranks.Rank;
 import com.thebubblenetwork.api.global.sql.SQLUtil;
@@ -195,12 +196,13 @@ public class BubbleBungee extends BubbleHubObject<Plugin,ProxiedPlayer> implemen
         while (set.next()) {
             String rankname = set.getString("rank");
             Map currentmap = map.containsKey(rankname) ? map.get(rankname) : new HashMap();
-            currentmap.put(set.getObject("key"), set.getObject("value"));
+            currentmap.put(set.getString("key"), set.getString("value"));
             map.put(rankname, currentmap);
         }
         set.close();
         for (Map.Entry<String, Map> entry : map.entrySet()) {
             Rank.loadRank(entry.getKey(),entry.getValue());
+            logInfo("Loaded rank: " + entry.getKey());
         }
     }
 
