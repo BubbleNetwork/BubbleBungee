@@ -119,9 +119,20 @@ public class BubbleListener implements Listener,PacketListener{
             ProxiedBubblePlayer player = new ProxiedBubblePlayer(connection.getUniqueId(),data);
             player.setName(connection.getName());
             ProxiedBubblePlayer.getPlayerObjectMap().put(connection.getUniqueId(),player);
-            getBungee().logInfo("Loaded data: " + connection.getName() + " UUID: " + connection.getUniqueId().toString());
+            getBungee().logInfo("Loaded data: " + connection.getName());
         } catch (SQLException|ClassNotFoundException e1) {
             getBungee().logSevere(e1.getMessage());
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onQuit(PlayerDisconnectEvent e){
+        try {
+            ProxiedBubblePlayer player = (ProxiedBubblePlayer) ProxiedBubblePlayer.getPlayerObjectMap().remove(e.getPlayer().getUniqueId());
+            player.getData().save(PlayerData.table,"uuid",player.getUUID());
+        } catch (SQLException|ClassNotFoundException e1) {
+            getBungee().logSevere(e1.getMessage());
+            getBungee().logSevere("Could not save playerdata for " + e.getPlayer().getName());
         }
     }
 
