@@ -20,7 +20,7 @@ import java.util.logging.Logger;
  * Created January 2016
  */
 
-public interface IBubbleBungee extends BubbleHub<Plugin,ProxiedPlayer> {
+public interface IBubbleBungee extends BubbleHub<Plugin> {
     ServerManager getManager();
     P getPlugin();
     PlayerData loadData(UUID load) throws SQLException, ClassNotFoundException;

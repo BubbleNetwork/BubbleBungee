@@ -29,7 +29,7 @@ import java.util.logging.Logger;
  * Created January 2016
  */
 
-public class BubbleBungee extends BubbleHubObject<Plugin,ProxiedPlayer> implements IBubbleBungee{
+public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBungee{
 
     private static IBubbleBungee instance;
 

@@ -8,7 +8,9 @@ import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshak
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshake.PlayerCountUpdate;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshake.RankDataUpdate;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.request.PlayerDataRequest;
+import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.request.ServerShutdownRequest;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.PlayerDataResponse;
+import com.thebubblenetwork.api.global.data.InvalidBaseException;
 import com.thebubblenetwork.api.global.data.PlayerData;
 import com.thebubblenetwork.api.global.player.BubblePlayer;
 import com.thebubblenetwork.api.global.plugin.BubbleHubObject;
@@ -17,10 +19,7 @@ import com.thebubblenetwork.api.global.type.ServerType;
 import com.thebubblenetwork.bubblebungee.player.ProxiedBubblePlayer;
 import com.thebubblenetwork.bubblebungee.servermanager.BubbleServer;
 import de.mickare.xserver.net.XServer;
-import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.CommandSender;
-import net.md_5.bungee.api.ServerPing;
+import net.md_5.bungee.api.*;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -87,20 +86,57 @@ public class BubbleListener implements Listener,PacketListener{
         if(e.getSender() instanceof ProxiedPlayer && !e.getMessage().startsWith("/")){
             ProxiedPlayer proxiedPlayer = (ProxiedPlayer)e.getSender();
             ProxiedBubblePlayer proxiedBubblePlayer = ProxiedBubblePlayer.getObject(proxiedPlayer.getUniqueId());
+
             Rank rank = proxiedBubblePlayer.getRank();
             BaseComponent[] prefix = TextComponent.fromLegacyText(rank.getPrefix());
+
+            withHover(prefix,new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                    TextComponent.fromLegacyText(
+                            rank.getPrefix() + "\n\nName: " + ChatColor.GRAY + rank.getName()
+                            + (rank.isAuthorized("donator") ? "\n" + ChatColor.GOLD + "Donator" : "")
+                            + (rank.isAuthorized("staff") ? "\n" + ChatColor.RED + "Staff" : "")
+                            + (rank.isAuthorized("owner") ? "\n" + ChatColor.DARK_RED + "Owner" : "")
+                            + (rank.isDefault() ? "\n" + ChatColor.GRAY + "Default Rank" : "")
+                    )));
+
+            if(rank.isAuthorized("donator")){
+                try{
+                    String s = rank.getData().getString("donation-link");
+                    withClick(prefix,new ClickEvent(ClickEvent.Action.OPEN_URL,s));
+                }
+                catch (InvalidBaseException ex){
+                }
+            }
+
             BaseComponent[] suffix = TextComponent.fromLegacyText(rank.getSuffix());
             BaseComponent[] message = TextComponent.fromLegacyText(e.getMessage());
+
+            String ranks = rank.getName();
+            for(Rank r:proxiedBubblePlayer.getSubRanks())ranks += " ," + r.getName();
+
+            HoverEvent clickhover = new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                    TextComponent.fromLegacyText("Name: " + ChatColor.GRAY + proxiedBubblePlayer.getName() + "\nSent at " + ChatColor.GRAY + format.format(new Date()) +"\nRank: " + ChatColor.GRAY + ranks));
+            withHover(message,clickhover);
+
             TextComponent name = new TextComponent(proxiedBubblePlayer.getNickName());
-            name.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                    TextComponent.fromLegacyText(" Name: " + ChatColor.GRAY + proxiedBubblePlayer.getName() + "\n Sent at " + ChatColor.GRAY + format.format(new Date()) +"\n Rank: " + ChatColor.GRAY + rank.getName())));
+            name.setHoverEvent(clickhover);
             name.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND,"/msg " + proxiedPlayer.getName() + " "));
+
             BaseComponent[] fullmsg = new ImmutableList.Builder<BaseComponent>().add(prefix).add(name).add(suffix).add(message).build().toArray(new BaseComponent[0]);
+
             for(ProxiedPlayer target:proxiedPlayer.getServer().getInfo().getPlayers()){
                 target.sendMessage(ChatMessageType.CHAT,fullmsg);
             }
             e.setCancelled(true);
         }
+    }
+
+    private void withHover(BaseComponent[] components,HoverEvent event){
+        for(BaseComponent component:components)component.setHoverEvent(event);
+    }
+
+    private void withClick(BaseComponent[] components,ClickEvent event){
+        for(BaseComponent component:components)component.setClickEvent(event);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -188,8 +224,14 @@ public class BubbleListener implements Listener,PacketListener{
                     sendPacketSafe(from.getServer(), new PlayerDataRequest(player.getName()));
                     String name = player.getName().toLowerCase();
                     requestqueue.add(name);
+                    long tries = 0;
                     while (requestqueue.contains(name)) {
-
+                        if(tries > 4000){
+                            e.setCancelled(true);
+                            getBungee().logSevere("Server timed out? " + server.getName());
+                            break;
+                        }
+                        tries++;
                     }
                     getBungee().logInfo("Server change authorized for " + player.getName());
                 }
@@ -239,6 +281,13 @@ public class BubbleListener implements Listener,PacketListener{
             else getBungee().logSevere("Received response without player on bungee " + response.getName() + " (" + info.getServer().getName() +")");
             requestqueue.remove(response.getName().toLowerCase());
         }
+        else if(message instanceof ServerShutdownRequest){
+            BubbleServer server = getBungee().getManager().getServer(info.getServer());
+            if(server != null){
+                server.remove();
+            }
+            else getBungee().logSevere("Failed to shutdown server " + info.getServer().getName());
+        }
         else{
             getBungee().logSevere("Could not accept packet - " + message.getType().getName());
         }
@@ -252,10 +301,8 @@ public class BubbleListener implements Listener,PacketListener{
         getBungee().logInfo("Sending assign message to " + info.getServer().getHost());
     }
 
-    public void onDisconnect(PacketInfo info) {
-        BubbleServer server = getBungee().getManager().getServer(info.getServer());
-        if(server != null)server.remove();
-        getBungee().logInfo("Server - " + info.getServer().getHost() + " - Disconnected");
+    public void onDisconnect(PacketInfo info){
+        getBungee().logInfo(info.getServer().getName() + " disconnect?");
     }
 
     public void sendPacketSafe(final XServer server,final IPluginMessage message){
