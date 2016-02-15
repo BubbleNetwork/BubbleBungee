@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URLClassLoader;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
@@ -224,5 +225,21 @@ public class BungeePlugman implements Plugman<Plugin>{
 
     private boolean enablePlugin(Map<PluginDescription, Boolean> pluginStatuses, Stack<PluginDescription> dependStack, PluginDescription plugin) {
         return (Boolean)doPluginManagerMethod("enablePlugin",new Class[]{Map.class,Stack.class,PluginDescription.class},new Object[]{pluginStatuses,dependStack,plugin});
+    }
+
+    public Collection<Plugin> getPlugins(){
+        return plugins().values();
+    }
+
+    public PluginManager getPluginManager() {
+        return pluginManager;
+    }
+
+    public ProxyServer getServer() {
+        return server;
+    }
+
+    public void reset_toLoad(){
+        setPluginManagerField("toLoad",new HashMap<String, PluginDescription>());
     }
 }

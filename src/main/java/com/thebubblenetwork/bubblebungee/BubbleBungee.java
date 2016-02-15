@@ -5,9 +5,14 @@ import com.thebubblenetwork.api.global.data.PlayerData;
 import com.thebubblenetwork.api.global.plugin.BubbleHubObject;
 import com.thebubblenetwork.api.global.ranks.Rank;
 import com.thebubblenetwork.api.global.sql.SQLUtil;
+import com.thebubblenetwork.bubblebungee.command.ICommand;
+import com.thebubblenetwork.bubblebungee.command.commands.FriendCommand;
+import com.thebubblenetwork.bubblebungee.command.commands.PlugmanCommand;
+import com.thebubblenetwork.bubblebungee.command.commands.ReloadCommand;
 import com.thebubblenetwork.bubblebungee.servermanager.ServerManager;
 import de.mickare.xserver.XServerPlugin;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
 import net.md_5.bungee.config.Configuration;
@@ -36,7 +41,7 @@ import java.util.logging.Logger;
 public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBungee{
 
     private static IBubbleBungee instance;
-    private static final int VERSION = 8;
+    private static final int VERSION = 12;
 
     public static IBubbleBungee getInstance() {
         return instance;
@@ -70,7 +75,6 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
 
         logInfo("Loaded ranks");
 
-
         logInfo("Setting up components");
 
         manager = new ServerManager(this);
@@ -78,7 +82,24 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
         getPacketHub().registerListener(listener);
         getPlugin().getProxy().getPluginManager().registerListener(getPlugin(),listener);
 
+        logInfo("Components are set up");
+
+        logInfo("Creating commands");
+
+        registerCommand(new PlugmanCommand(getPlugman()));
+        registerCommand(new ReloadCommand("b",getPlugman()));
+        registerCommand(new FriendCommand());
+
+        logInfo("Commands have been created");
+
         logInfo("Finished setup");
+    }
+
+    public void registerCommand(ICommand command){
+        if(command instanceof Command){
+            getPlugin().getProxy().getPluginManager().registerCommand(getPlugin(),(Command)command);
+        }
+        else throw new IllegalArgumentException(command.getClass().getName() + " is not a bungeecord command!");
     }
 
     public void onBubbleDisable(){
