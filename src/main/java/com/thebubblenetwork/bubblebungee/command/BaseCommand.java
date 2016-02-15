@@ -44,16 +44,14 @@ public class BaseCommand extends Command implements ICommand{
     }
 
     public String Iexecute(CommandSender commandSender, String[] strings) throws CommandException{
-        if(getIPermission() != null && !commandSender.hasPermission(getIPermission())){
-            throw new CommandException("You do not have permission for this command",this);
-        }
+        if(getIPermission() != null && !commandSender.hasPermission(getIPermission()))throw new CommandException("You do not have permission for this command",this);
         if(strings.length == 0){
             throw invalidusage;
         }
         String firstarg = strings[0];
         ICommand command = getCommand(firstarg);
         if(command != null){
-            if(!commandSender.hasPermission(command.getIPermission()))throw  new CommandException("You do not have permission for this command",command);
+            if(command.getIPermission() != null && !commandSender.hasPermission(command.getIPermission()))throw  new CommandException("You do not have permission for this command",command);
             return command.Iexecute(commandSender,new ArgTrimmer<>(String.class,strings).trim(1));
 
         }
