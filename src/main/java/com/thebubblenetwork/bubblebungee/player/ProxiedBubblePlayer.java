@@ -3,8 +3,10 @@ package com.thebubblenetwork.bubblebungee.player;
 import com.thebubblenetwork.api.global.data.PlayerData;
 import com.thebubblenetwork.api.global.player.BubblePlayer;
 import com.thebubblenetwork.api.global.player.BubblePlayerObject;
+import com.thebubblenetwork.bubblebungee.BubbleBungee;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -61,5 +63,14 @@ public class ProxiedBubblePlayer extends BubblePlayerObject<ProxiedPlayer> imple
             else throw new UnsupportedOperationException("Name is not set");
         }
         return name;
+    }
+
+    public void save(){
+        try {
+            getData().save(PlayerData.table,"uuid",getUUID());
+        } catch (SQLException|ClassNotFoundException e) {
+            BubbleBungee.getInstance().logSevere(e.getMessage());
+            BubbleBungee.getInstance().logSevere("Could not save data of " + getName());
+        }
     }
 }

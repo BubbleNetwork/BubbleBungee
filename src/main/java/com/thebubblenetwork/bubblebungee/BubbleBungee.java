@@ -9,11 +9,15 @@ import com.thebubblenetwork.bubblebungee.servermanager.ServerManager;
 import de.mickare.xserver.XServerPlugin;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
+import net.md_5.bungee.api.plugin.PluginManager;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -32,6 +36,7 @@ import java.util.logging.Logger;
 public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBungee{
 
     private static IBubbleBungee instance;
+    private static final int VERSION = 8;
 
     public static IBubbleBungee getInstance() {
         return instance;
@@ -44,6 +49,7 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
     private ServerManager manager;
     private BubbleListener listener;
     private P plugin;
+    private BungeePlugman pluginManager;
 
     public BubbleBungee(P plugin){
         super();
@@ -153,7 +159,7 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
     }
 
     public void onBubbleLoad() {
-
+        pluginManager = new BungeePlugman(getPlugin().getProxy());
     }
 
     public ProxiedPlayer getPlayer(UUID uuid) {
@@ -209,7 +215,27 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
         return (XServerPlugin) p;
     }
 
+    public File getReplace() {
+        return getPlugin().getFile();
+    }
+
+    public String getArtifact() {
+        return getPlugin().getDescription().getName();
+    }
+
+    public int getVersion() {
+        return VERSION;
+    }
+
     public boolean bungee(){
         return true;
+    }
+
+    public BungeePlugman getPlugman() {
+        return pluginManager;
+    }
+
+    public void update(Runnable r) {
+        runTaskLater(r,1L,TimeUnit.SECONDS);
     }
 }

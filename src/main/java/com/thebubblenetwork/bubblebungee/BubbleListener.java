@@ -5,6 +5,7 @@ import com.thebubblenetwork.api.global.bubblepackets.PacketInfo;
 import com.thebubblenetwork.api.global.bubblepackets.PacketListener;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.IPluginMessage;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshake.AssignMessage;
+import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshake.JoinableUpdate;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshake.PlayerCountUpdate;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshake.RankDataUpdate;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.request.PlayerDataRequest;
@@ -16,6 +17,7 @@ import com.thebubblenetwork.api.global.player.BubblePlayer;
 import com.thebubblenetwork.api.global.plugin.BubbleHubObject;
 import com.thebubblenetwork.api.global.ranks.Rank;
 import com.thebubblenetwork.api.global.type.ServerType;
+import com.thebubblenetwork.api.global.type.ServerTypeObject;
 import com.thebubblenetwork.bubblebungee.player.ProxiedBubblePlayer;
 import com.thebubblenetwork.bubblebungee.servermanager.BubbleServer;
 import de.mickare.xserver.net.XServer;
@@ -46,7 +48,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class BubbleListener implements Listener,PacketListener{
     private IBubbleBungee bungee;
-    private static final String spacer = "     ";
+    private static final String spacer = "\n";
     private String line1 = spacer + ChatColor.AQUA + ChatColor.BOLD.toString() + "BubbleNetwork" + spacer;
     private String line2 = ChatColor.BLUE + " Come and join the fun!";
     private List<String> sample = Arrays.asList(
@@ -112,7 +114,7 @@ public class BubbleListener implements Listener,PacketListener{
             BaseComponent[] message = TextComponent.fromLegacyText(e.getMessage());
 
             String ranks = rank.getName();
-            for(Rank r:proxiedBubblePlayer.getSubRanks())ranks += " ," + r.getName();
+            for(Rank r:proxiedBubblePlayer.getSubRanks())ranks += ", " + r.getName();
 
             HoverEvent clickhover = new HoverEvent(HoverEvent.Action.SHOW_TEXT,
                     TextComponent.fromLegacyText("Name: " + ChatColor.GRAY + proxiedBubblePlayer.getName() + "\nSent at " + ChatColor.GRAY + format.format(new Date()) +"\nRank: " + ChatColor.GRAY + ranks));
@@ -163,13 +165,8 @@ public class BubbleListener implements Listener,PacketListener{
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onQuit(PlayerDisconnectEvent e){
-        try {
-            ProxiedBubblePlayer player = (ProxiedBubblePlayer) ProxiedBubblePlayer.getPlayerObjectMap().remove(e.getPlayer().getUniqueId());
-            player.getData().save(PlayerData.table,"uuid",player.getUUID());
-        } catch (SQLException|ClassNotFoundException e1) {
-            getBungee().logSevere(e1.getMessage());
-            getBungee().logSevere("Could not save playerdata for " + e.getPlayer().getName());
-        }
+        ProxiedBubblePlayer player = (ProxiedBubblePlayer) ProxiedBubblePlayer.getPlayerObjectMap().remove(e.getPlayer().getUniqueId());
+        player.save();
     }
 
     @EventHandler
@@ -207,8 +204,9 @@ public class BubbleListener implements Listener,PacketListener{
     @EventHandler
     public void onPostJoin(PostLoginEvent e){
         ProxiedPlayer p = e.getPlayer();
-        p.connect(getBungee().getManager().getServer("L1").getInfo());
-        p.setReconnectServer(getBungee().getManager().getServer("L1").getInfo());
+        BubbleServer server = getBungee().getManager().getAvailble(ServerTypeObject.getType("Lobby"));
+        p.setReconnectServer(server.getInfo());
+        p.connect(server.getInfo());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -224,14 +222,18 @@ public class BubbleListener implements Listener,PacketListener{
                     sendPacketSafe(from.getServer(), new PlayerDataRequest(player.getName()));
                     String name = player.getName().toLowerCase();
                     requestqueue.add(name);
-                    long tries = 0;
+                    long max = TimeUnit.SECONDS.toMillis(10);
+                    long original = System.currentTimeMillis();
                     while (requestqueue.contains(name)) {
-                        if(tries > 4000){
+                        try {
+                            Thread.sleep(100L);
+                        } catch (InterruptedException e1) {
+                        }
+                        if(System.currentTimeMillis() > original + max){
                             e.setCancelled(true);
                             getBungee().logSevere("Server timed out? " + server.getName());
                             break;
                         }
-                        tries++;
                     }
                     getBungee().logInfo("Server change authorized for " + player.getName());
                 }
@@ -287,6 +289,14 @@ public class BubbleListener implements Listener,PacketListener{
                 server.remove();
             }
             else getBungee().logSevere("Failed to shutdown server " + info.getServer().getName());
+        }
+        else if(message instanceof JoinableUpdate){
+            JoinableUpdate update = (JoinableUpdate)message;
+            BubbleServer server = getBungee().getManager().getServer(info.getServer());
+            if(server != null){
+                server.setJoinable(update.isJoinable());
+            }
+            else getBungee().logSevere("Server not found when receiving incoming joinable update " + info.getServer().getName());
         }
         else{
             getBungee().logSevere("Could not accept packet - " + message.getType().getName());

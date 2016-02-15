@@ -71,6 +71,15 @@ public class ServerManager {
         servers.remove(server);
     }
 
+    public BubbleServer getAvailble(ServerType type){
+        for(BubbleServer server:servers){
+            if (type == server.getType() && server.isJoinable() && server.getPlayercount() < server.getMaxplayercount()) {
+                return server;
+            }
+        }
+        return null;
+    }
+
     public int getNewID(ServerType wrapper){
         int i = 0;
         for(BubbleServer server:servers){

@@ -37,6 +37,7 @@ public class BubbleServer{
     private int playercount = 0;
     private int id;
     private ServerType type;
+    private boolean joinable = false;
 
     private BubbleServer(ServerInfo info,XServer server,ServerType wrapper,int id){
         this.id = id;
@@ -83,6 +84,14 @@ public class BubbleServer{
 
     public void setPlayercount(int playercount) {
         this.playercount = playercount;
+    }
+
+    public boolean isJoinable(){
+        return joinable;
+    }
+
+    public void setJoinable(boolean joinable){
+        this.joinable = joinable;
     }
 
     protected void setInfo(ServerInfo info) throws Exception{
