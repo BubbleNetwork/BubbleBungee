@@ -1,6 +1,8 @@
 package com.thebubblenetwork.bubblebungee.command.commands;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.thebubblenetwork.api.global.data.InvalidBaseException;
 import com.thebubblenetwork.api.global.data.PlayerData;
@@ -18,6 +20,9 @@ import com.thebubblenetwork.bubblebungee.player.ProxiedBubblePlayer;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
 import java.sql.ResultSet;
@@ -32,7 +37,7 @@ import java.util.*;
  * Created February 2016
  */
 public class RankCommand extends BaseCommand{
-    private static UUID getUUID(String name){
+    protected static UUID getUUID(String name){
         ProxiedPlayer player;
         if((player = ProxyServer.getInstance().getPlayer(name)) != null)return player.getUniqueId();
         SQLConnection connection = BubbleBungee.getInstance().getConnection();
@@ -80,55 +85,55 @@ public class RankCommand extends BaseCommand{
         super("rankmanager", "rankmanager.use",
                 new ImmutableSet.Builder<ICommand>()
                         .add(new SubCommand("list","rankmanager.list","list","listranks","groups","ranks") {
-                            public String Iexecute(CommandSender sender, String[] args) throws CommandException {
-                                String s = ChatColor.GOLD + "Ranks: ";
+                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                                ImmutableList.Builder<BaseComponent> componentBuilder = new ImmutableList.Builder<>();
+                                TextComponent component = new TextComponent("All ranks:");
+                                component.setColor(ChatColor.GOLD);
+                                component.setBold(true);
+                                componentBuilder.add(component);
                                 for(Rank r:Rank.getRanks()){
-                                    s += "\n" + r.getName();
+                                    TextComponent rankcomponent = new TextComponent(r.getName());
+                                    rankcomponent.setColor(ChatColor.GOLD);
+                                    rankcomponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,TextComponent.fromLegacyText(r.getPrefix())));
                                 }
-                                return s;
+                                return componentBuilder.build().toArray(new BaseComponent[0]);
                             }
                         })
                         .add(new SubCommand("setprefix","rankmanager.prefix","setprefix <rank> <prefix>","prefix") {
-                            public String Iexecute(CommandSender sender, String[] args) throws CommandException {
-                                if(args.length < 2)throw new CommandException("Invalid usage: " + getUsage(),this);
+                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                                if(args.length < 2)throw invalidUsage();
                                 String rankname = args[0];
                                 Rank r = Rank.getRank(rankname);
                                 if(r == null){
-                                    Rank.loadRank(rankname,new HashMap());
-                                    r = Rank.getRank(rankname);
-                                    if(r == null)throw new CommandException("Rank not found",this);
+                                    throw  new CommandException("Rank not found",this);
                                 }
-                                String prefix = Joiner.on(" ").join(new ArgTrimmer<>(String.class,args).trim(1));
+                                String prefix = Joiner.on(" ").join(new ArgTrimmer<>(String.class,args).trim(1)).replace("%20"," ");
                                 r.setPrefix(prefix);
                                 saveRank(r);
-                                return ChatColor.GOLD + "Successfuly set the prefix of \'" + r.getName() + "\' to \'" + ChatColor.translateAlternateColorCodes('&',prefix) + ChatColor.GOLD + "\'";
+                                return TextComponent.fromLegacyText(ChatColor.GOLD + "Successfuly set the prefix of \'" + r.getName() + "\' to \'" + ChatColor.translateAlternateColorCodes('&',prefix) + ChatColor.GOLD + "\'");
                             }
                         })
                         .add(new SubCommand("setsuffix","rankmanager.suffix","setsuffix <rank> <suffix>","suffix") {
-                            public String Iexecute(CommandSender sender, String[] args) throws CommandException {
-                                if(args.length < 2)throw new CommandException("Invalid usage: " + getUsage(),this);
+                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                                if(args.length < 2)throw invalidUsage();
                                 String rankname = args[0];
                                 Rank r = Rank.getRank(rankname);
                                 if(r == null){
-                                    Rank.loadRank(rankname,new HashMap());
-                                    r = Rank.getRank(rankname);
-                                    if(r == null)throw new CommandException("Rank not found",this);
+                                    throw new CommandException("Rank not found",this);
                                 }
-                                String suffix = Joiner.on(" ").join(new ArgTrimmer<>(String.class,args).trim(1));
+                                String suffix = Joiner.on(" ").join(new ArgTrimmer<>(String.class,args).trim(1)).replace("%20"," ");
                                 r.setSuffix(suffix);
                                 saveRank(r);
-                                return ChatColor.GOLD + "Successfuly set the suffix of \'" + r.getName() + "\' to \'" + ChatColor.translateAlternateColorCodes('&',suffix) + ChatColor.GOLD + "\'";
+                                return TextComponent.fromLegacyText(ChatColor.GOLD + "Successfuly set the suffix of \'" + r.getName() + "\' to \'" + ChatColor.translateAlternateColorCodes('&',suffix) + ChatColor.GOLD + "\'");
                             }
                         })
                         .add(new SubCommand("setinheritance","rankmanager.inheritance","setinheritance <rank> <inheritance/none>","inheritance") {
-                            public String Iexecute(CommandSender sender, String[] args) throws CommandException {
-                                if(args.length < 2)throw new CommandException("Invalid usage: " + getUsage(),this);
+                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                                if(args.length < 2)throw invalidUsage();
                                 String rankname = args[0];
                                 Rank r = Rank.getRank(rankname);
                                 if(r == null){
-                                    Rank.loadRank(rankname,new HashMap());
-                                    r = Rank.getRank(rankname);
-                                    if(r == null)throw new CommandException("Rank not found",this);
+                                    throw new CommandException("Rank not found",this);
                                 }
                                 String toname = args[1];
                                 Rank toset;
@@ -140,16 +145,16 @@ public class RankCommand extends BaseCommand{
                                 else toname = toset.getName();
                                 r.setInheritance(toset);
                                 saveRank(r);
-                                return ChatColor.GOLD + "Successfuly set the inheritance of \'" + r.getName() + "\' to \'" + toname + "\'";
+                                return TextComponent.fromLegacyText(ChatColor.GOLD + "Successfuly set the inheritance of \'" + r.getName() + "\' to \'" + toname + "\'");
                             }
                         })
                         .add(new SubCommand("add","rankmanager.addpermission","add <rank> <permission>","addpermission") {
-                            public String Iexecute(CommandSender sender, String[] args) throws CommandException {
-                                if(args.length < 2)throw new CommandException("Invalid usage: " + getUsage(),this);
+                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                                if(args.length < 2)throw invalidUsage();
                                 String rankname = args[0];
                                 Rank r = Rank.getRank(rankname);
                                 if(r == null){
-                                    Rank.loadRank(rankname,new HashMap());
+                                    Rank.loadRank(rankname,new HashMap<String,String>());
                                     r = Rank.getRank(rankname);
                                     if(r == null)throw new CommandException("Rank not found",this);
                                 }
@@ -164,12 +169,12 @@ public class RankCommand extends BaseCommand{
                                 }
                                 r.getData().set(permission,haspermission);
                                 saveRank(r);
-                                return ChatColor.GOLD + "Successfuly set \'" + permission + " (" + String.valueOf(haspermission) + ") \' on rank \'" + r.getName() + "\'";
+                                return TextComponent.fromLegacyText(ChatColor.GOLD + "Successfuly set \'" + permission + " (" + String.valueOf(haspermission) + ") \' on rank \'" + r.getName() + "\'");
                             }
                         })
                         .add(new SubCommand("remove","rankmanager.removepermission","remove <rank> <permission>","removepermission") {
-                            public String Iexecute(CommandSender sender, String[] args) throws CommandException {
-                                if(args.length < 2)throw new CommandException("Invalid usage: " + getUsage(),this);
+                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                                if(args.length < 2)throw invalidUsage();
                                 String rankname = args[0];
                                 Rank r = Rank.getRank(rankname);
                                 if(r == null){
@@ -189,12 +194,12 @@ public class RankCommand extends BaseCommand{
                                 }
                                 r.getData().getRaw().remove(permission);
                                 saveRank(r);
-                                return ChatColor.GOLD + "Successfuly removed \'" + permission + "\' on rank \'" + r.getName() + "\'";
+                                return TextComponent.fromLegacyText(ChatColor.GOLD + "Successfuly removed \'" + permission + "\' on rank \'" + r.getName() + "\'");
                             }
                         })
                         .add(new SubCommand("info","rankmanager.info","info <rank>","information") {
-                            public String Iexecute(CommandSender sender, String[] args) throws CommandException {
-                                if(args.length == 0)throw new CommandException("Invalid usage",this);
+                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                                if(args.length == 0)throw invalidUsage();
                                 String rankname = args[0];
                                 Rank r = Rank.getRank(rankname);
                                 if(r == null){
@@ -215,35 +220,13 @@ public class RankCommand extends BaseCommand{
                                     }
                                     information += "\n" + ChatColor.GOLD + " - " + key + " (" + String.valueOf(value) + ")";
                                 }
-                                return information;
+                                return TextComponent.fromLegacyText(information);
                             }
                         })
-                        .add(new SubCommand("whois","rankmanager.whois","whois <player>","show","who") {
-                            public String Iexecute(CommandSender sender, String[] args) throws CommandException {
-                                if(args.length == 0)throw new CommandException("Invalid usage",this);
-                                String playername = args[0];
-                                ProxiedBubblePlayer online = ProxiedBubblePlayer.getObject(playername);
-                                if(online == null){
-                                    UUID u = getUUID(playername);
-                                    if(u == null)throw new CommandException("Player not found",this);
-                                    try {
-                                        online = new ProxiedBubblePlayer(u,BubbleBungee.getInstance().loadData(u));
-                                    } catch (Exception e) {
-                                        throw new CommandException("Player not found",this);
-                                    }
-                                }
-                                String info = ChatColor.GOLD + "Whois: " + ChatColor.RED + online.getName();
-                                info += "\n" + ChatColor.GOLD + "Nickname: " + online.getNickName();
-                                info += "\n" + ChatColor.GOLD + "Tokens: " + String.valueOf(online.getTokens());
-                                info += "\n" + ChatColor.GOLD + "Rank: " + online.getRank().getName();
-                                info += "\n" + ChatColor.GOLD + "Subranks: ";
-                                for(Rank r:online.getSubRanks()) info += r.getName();
-                                return info;
-                            }
-                        })
+                        .add(new WhoisCommand())
                         .add(new SubCommand("setrank","rankmanager.setrank","setrank <player> <rank>","setgroup") {
-                            public String Iexecute(CommandSender sender, String[] args) throws CommandException {
-                                if(args.length < 2)throw new CommandException("Invalid usage",this);
+                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                                if(args.length < 2)throw invalidUsage();
                                 String playername = args[0];
                                 ProxiedBubblePlayer online = ProxiedBubblePlayer.getObject(playername);
                                 boolean forcesave = false;
@@ -264,12 +247,12 @@ public class RankCommand extends BaseCommand{
                                 }
                                 online.setRank(r);
                                 if(forcesave)online.save();
-                                return ChatColor.GOLD + "Set the rank of \'" + online.getNickName() + "\' to \'" + r.getName() + "\'";
+                                return TextComponent.fromLegacyText(ChatColor.GOLD + "Set the rank of \'" + online.getNickName() + "\' to \'" + r.getName() + "\'");
                             }
                         })
-                        .add(new SubCommand("addrank","rankmanager.addrank","addrank <player> <rank>","addgroup") {
-                            public String Iexecute(CommandSender sender, String[] args) throws CommandException {
-                                if(args.length < 2)throw new CommandException("Invalid usage",this);
+                        .add(new SubCommand("addrank","rankmanager.addsubrank","addrank <player> <rank>","addgroup") {
+                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                                if(args.length < 2)throw invalidUsage();
                                 String playername = args[0];
                                 ProxiedBubblePlayer online = ProxiedBubblePlayer.getObject(playername);
                                 boolean forcesave = false;
@@ -294,12 +277,12 @@ public class RankCommand extends BaseCommand{
                                 rankList.add(r);
                                 online.setSubRanks(rankList);
                                 if(forcesave)online.save();
-                                return ChatColor.GOLD + "Added the subrank of \'" + online.getNickName() + "\' to \'" + r.getName() + "\'";
+                                return TextComponent.fromLegacyText(ChatColor.GOLD + "Added the subrank of \'" + online.getNickName() + "\' to \'" + r.getName() + "\'");
                             }
                         })
-                        .add(new SubCommand("removerank","rankmanager.removerank","removerank <player> <rank>","removegroup") {
-                            public String Iexecute(CommandSender sender, String[] args) throws CommandException {
-                                if(args.length < 2)throw new CommandException("Invalid usage",this);
+                        .add(new SubCommand("removerank","rankmanager.removesubrank","removerank <player> <rank>","removegroup") {
+                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                                if(args.length < 2)throw invalidUsage();
                                 String playername = args[0];
                                 ProxiedBubblePlayer online = ProxiedBubblePlayer.getObject(playername);
                                 boolean forcesave = false;
@@ -324,7 +307,58 @@ public class RankCommand extends BaseCommand{
                                 rankList.remove(r);
                                 online.setSubRanks(rankList);
                                 if(forcesave)online.save();
-                                return ChatColor.GOLD + "Removed the subrank of \'" + online.getNickName() + "\' from \'" + r.getName() + "\'";
+                                return TextComponent.fromLegacyText(ChatColor.GOLD + "Removed the subrank of \'" + online.getNickName() + "\' from \'" + r.getName() + "\'");
+                            }
+                        })
+                        .add(new SubCommand("deleterank","rankmanager.deleterank","deleterank <rank>","deletegroup") {
+                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                                if(args.length == 0)throw invalidUsage();
+                                String rankname = args[0];
+                                Rank r = Rank.getRank(rankname);
+                                if(r == null){
+                                    throw new CommandException("Invalid rank",this);
+                                }
+                                //Incase its the only rank
+                                if(r.isDefault() || Rank.getDefault() == r){
+                                    throw new CommandException("You may not delete the default rank",this);
+                                }
+                                Rank.getRanks().remove(r);
+                                Rank fakerank = new Rank(r.getName(),new RankData(null));
+                                saveRank(fakerank);
+                                r.getData().getRaw().clear();
+                                try {
+                                    r.getData().save("ranks","rank",r.getName());
+                                } catch (Exception e) {
+                                    throw new CommandException("Failed to save the deleted rank in SQL",this);
+                                }
+                                return TextComponent.fromLegacyText(ChatColor.GOLD + "Successfully deleted the rank \'" + r.getName() + "\'");
+                            }
+                        })
+                        .add(new SubCommand("createrank","rankmanager.createrank","createrank <rank>","creategroup") {
+                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                                if(args.length == 0)throw invalidUsage();
+                                String rankname = args[0];
+                                if(Rank.getRank(rankname) != null)throw new CommandException("This rank has already been created",this);
+                                Rank.loadRank(rankname,new ImmutableMap.Builder<String,String>().put("default",String.valueOf(true)).build());
+                                return TextComponent.fromLegacyText(ChatColor.GOLD + "Successfully created a rank with the name \'" + rankname + "\'");
+                            }
+                        })
+                        .add(new SubCommand("setdefault","rankmanager.setdefault","setdefault <rank>") {
+                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                                if(args.length == 0)throw invalidUsage();
+                                String rankname = args[0];
+                                Rank r = Rank.getRank(rankname);
+                                if(r == null){
+                                    throw  new CommandException("Rank not found",this);
+                                }
+                                if(r.isDefault()){
+                                    throw new CommandException("This rank is already default",this);
+                                }
+                                for(Rank otherrank:Rank.getRanks()){
+                                    otherrank.getData().set("default",false);
+                                }
+                                r.getData().set("default",true);
+                                return TextComponent.fromLegacyText(ChatColor.GOLD + "Successfully changed the default rank to \'" + r.getName() + "\'");
                             }
                         })
                         .build()

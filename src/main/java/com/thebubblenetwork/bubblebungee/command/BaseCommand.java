@@ -4,6 +4,7 @@ import com.thebubblenetwork.api.global.java.ArgTrimmer;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.plugin.Command;
 
@@ -23,18 +24,24 @@ public class BaseCommand extends Command implements ICommand{
         this.subcommands = subcommands;
         String s = "";
         for(ICommand command:subcommands){
-            s += "\n" + getUsage().replace("<arg>",command.getName());
+            String usage = command.getUsage();
+            while (usage.startsWith("/"))usage = usage.substring(1);
+            s += "\n" + getUsage().replace("<arg>",usage);
         }
         invalidusage = new CommandException("Invalid usage: " + getUsage() + s,this);
     }
 
     public void execute(CommandSender commandSender, String[] strings) {
         try {
-            commandSender.sendMessage(TextComponent.fromLegacyText(Iexecute(commandSender,strings)));
+            BaseComponent c[] = Iexecute(commandSender,strings);
+            if(c != null){
+                commandSender.sendMessage(c);
+            }
         } catch (CommandException e) {
             commandSender.sendMessage(e.getResponse());
         } catch (IllegalArgumentException e){
             commandSender.sendMessage(new CommandException(e.getMessage(),this).getResponse());
+            ProxyServer.getInstance().getLogger().log(Level.INFO,"An validation error occurred whilst executing",e);
         } catch (Throwable ex){
             commandSender.sendMessage(TextComponent.fromLegacyText(
                     ChatColor.RED + "An internal " + ex.getClass().getSimpleName() + " has occurred\n" + ChatColor.RED + ex.getMessage()
@@ -43,10 +50,10 @@ public class BaseCommand extends Command implements ICommand{
         }
     }
 
-    public String Iexecute(CommandSender commandSender, String[] strings) throws CommandException{
+    public BaseComponent[] Iexecute(CommandSender commandSender, String[] strings) throws CommandException{
         if(getIPermission() != null && !commandSender.hasPermission(getIPermission()))throw new CommandException("You do not have permission for this command",this);
         if(strings.length == 0){
-            throw invalidusage;
+            throw invalidUsage();
         }
         String firstarg = strings[0];
         ICommand command = getCommand(firstarg);
@@ -55,7 +62,7 @@ public class BaseCommand extends Command implements ICommand{
             return command.Iexecute(commandSender,new ArgTrimmer<>(String.class,strings).trim(1));
 
         }
-        throw invalidusage;
+        throw invalidUsage();
     }
 
     protected ICommand getCommand(String firstarg){
@@ -72,6 +79,10 @@ public class BaseCommand extends Command implements ICommand{
             }
         }
         return null;
+    }
+
+    public CommandException invalidUsage(){
+        return invalidusage;
     }
 
     public String getUsage() {

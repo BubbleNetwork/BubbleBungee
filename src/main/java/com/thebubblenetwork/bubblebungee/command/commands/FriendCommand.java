@@ -1,5 +1,6 @@
 package com.thebubblenetwork.bubblebungee.command.commands;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.thebubblenetwork.api.global.data.PlayerData;
 import com.thebubblenetwork.api.global.sql.SQLConnection;
@@ -10,9 +11,12 @@ import com.thebubblenetwork.bubblebungee.command.CommandException;
 import com.thebubblenetwork.bubblebungee.command.ICommand;
 import com.thebubblenetwork.bubblebungee.command.SubCommand;
 import com.thebubblenetwork.bubblebungee.player.ProxiedBubblePlayer;
+import com.thebubblenetwork.bubblebungee.servermanager.BubbleServer;
 import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -20,10 +24,7 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class FriendCommand extends BaseCommand{
     private static void notSelf(ProxiedPlayer player1,ProxiedPlayer player2){
@@ -47,20 +48,36 @@ public class FriendCommand extends BaseCommand{
         return uuidList;
     }
 
-    private static String getName(UUID u){
+    private static BaseComponent[] getPlayingInformation(UUID u){
         ProxiedBubblePlayer player;
-        if((player = ProxiedBubblePlayer.getObject(u)) != null)return ChatColor.GREEN + player.getNickName();
+        if((player = ProxiedBubblePlayer.getObject(u)) != null){
+            BaseComponent[] info  = TextComponent.fromLegacyText(ChatColor.GOLD + player.getNickName() + ChatColor.GREEN + " (Online)");
+            ProxiedPlayer proxiedPlayer = player.getPlayer();
+            if(proxiedPlayer != null) {
+                BubbleServer using = BubbleBungee.getInstance().getManager().getServer(proxiedPlayer.getServer().getInfo());
+                if (using != null){
+                    TextComponent playing = new TextComponent("In " + using.getType().getName());
+                    playing.setUnderlined(true);
+                    playing.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/server " + using.getName()));
+                    playing.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.GOLD + "Click to join them!")));
+                    playing.setColor(ChatColor.YELLOW);
+                    info = new ImmutableSet.Builder<BaseComponent>().add(info).add(playing).build().toArray(new BaseComponent[0]);
+                }
+            }
+            return info;
+        }
         SQLConnection connection = BubbleBungee.getInstance().getConnection();
         final String s = "`uuid`=\"" + u +"\" AND `key`=\"" + PlayerData.NAME + "\"";
         ResultSet set = null;
         try{
             set = SQLUtil.query(connection, PlayerData.table,"value",new SQLUtil.Where(null){
+                @Override
                 public String getWhere() {
                     return s;
                 }
             });
             if(set.next()){
-                return ChatColor.RED + set.getString("value");
+                return TextComponent.fromLegacyText(ChatColor.GOLD + set.getString("value") + ChatColor.RED + " (Offline)");
             }
         }
         catch (SQLException|ClassNotFoundException ex){
@@ -131,9 +148,9 @@ public class FriendCommand extends BaseCommand{
         super("friend", null,
                 new ImmutableSet.Builder<ICommand>()
                         .add(new SubCommand("add",null,"add <player>","rq") {
-                            public String Iexecute(CommandSender sender, String[] args) throws CommandException {
+                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
                                 ProxiedPlayer playerPlayer = notConsole(sender);
-                                if(args.length == 0)throw new CommandException("Invalid usage",this);
+                                if(args.length == 0)throw invalidUsage();
                                 //Player requesting
                                 ProxiedBubblePlayer player = isPlayer(playerPlayer);
                                 ProxiedPlayer targetPlayer = ProxyServer.getInstance().getPlayer(args[0]);
@@ -177,30 +194,38 @@ public class FriendCommand extends BaseCommand{
                                     target.setFriendsIncomingRequests(targetIncoming);
                                     returnstring = invitefriends;
                                 }
-                                return returnstring.replace("{0}",target.getNickName());
+                                return TextComponent.fromLegacyText(returnstring.replace("{0}",target.getNickName()));
                             }
                         })
                         .add(new SubCommand("list",null,"list","listfriends") {
-                            public String Iexecute(CommandSender sender, String[] args) throws CommandException {
+                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
                                 ProxiedPlayer playerPlayer = notConsole(sender);
                                 ProxiedBubblePlayer bubblePlayer = isPlayer(playerPlayer);
-                                String s = ChatColor.GOLD + "Your Friends";
+                                ImmutableList.Builder<BaseComponent> components = new ImmutableList.Builder<>();
+                                TextComponent friends = new TextComponent("Your friends:");
+                                friends.setColor(ChatColor.GOLD);
+                                friends.setBold(true);
+                                friends.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,TextComponent.fromLegacyText(ChatColor.GOLD + "A list of all your friends!")));
+                                components.add(friends);
                                 for(UUID u:bubblePlayer.getFriends()){
-                                    String name = FriendCommand.getName(u);
-                                    if(name != null)s += "\n" + name;
+                                    BaseComponent[] name = FriendCommand.getPlayingInformation(u);
+                                    if(name != null){
+                                        components.add(name);
+                                    }
                                 }
-                                return s;
+                                return components.build().toArray(new BaseComponent[0]);
                             }
                         })
                         .add(new SubCommand("remove",null,"remove <friend>","removefriend") {
-                            public String Iexecute(CommandSender sender, String[] args) throws CommandException {
+                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
                                 ProxiedPlayer proxiedPlayer = notConsole(sender);
                                 ProxiedBubblePlayer bubblePlayer = isPlayer(proxiedPlayer);
-                                if(args.length == 0)throw new CommandException("Invalid usage",this);
+                                if(args.length == 0)throw invalidUsage();
                                 List<UUID> playerFriends = newList(bubblePlayer.getFriends());
                                 ProxiedBubblePlayer online = ProxiedBubblePlayer.getObject(args[0]);
                                 boolean forcesave = false;
                                 if(online == null){
+                                    forcesave = true;
                                     UUID u = getUUID(args[0]);
                                     if(u == null)throw new CommandException("Player not found",this);
                                     if(u == proxiedPlayer.getUniqueId())throw new CommandException("You are not friends with yourself",this);
@@ -211,7 +236,6 @@ public class FriendCommand extends BaseCommand{
                                     } catch (Exception e) {
                                         throw new CommandException("Player not found",this);
                                     }
-                                    forcesave = true;
                                 }
                                 else {
                                     if(online.getUUID() == proxiedPlayer.getUniqueId())throw new CommandException("You are not friends with yourself",this);
@@ -224,7 +248,7 @@ public class FriendCommand extends BaseCommand{
                                 targetfriends.remove(proxiedPlayer.getUniqueId());
                                 online.setFriends(targetfriends);
                                 if(forcesave)online.save();
-                                return ChatColor.GOLD + "You are no longer friends with " + online.getNickName();
+                                return TextComponent.fromLegacyText(ChatColor.GOLD + "You are no longer friends with " + online.getNickName());
                             }
                         })
                         .build()

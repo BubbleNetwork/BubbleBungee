@@ -1,11 +1,13 @@
 package com.thebubblenetwork.bubblebungee.command;
 
 import net.md_5.bungee.api.CommandSender;
+import net.md_5.bungee.api.chat.BaseComponent;
 
 public interface ICommand {
-    String Iexecute(CommandSender sender,String[] args) throws CommandException;
+    BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException;
     String getUsage();
     String getIPermission();
     String getName();
     String[] getAliases();
+    CommandException invalidUsage();
 }

@@ -4,16 +4,12 @@ import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshak
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.PlayerDataResponse;
 import com.thebubblenetwork.api.global.data.DataObject;
 import com.thebubblenetwork.api.global.data.PlayerData;
-import com.thebubblenetwork.api.global.data.RankData;
 import com.thebubblenetwork.api.global.player.BubblePlayer;
 import com.thebubblenetwork.api.global.plugin.BubbleHubObject;
 import com.thebubblenetwork.api.global.ranks.Rank;
 import com.thebubblenetwork.api.global.sql.SQLUtil;
 import com.thebubblenetwork.bubblebungee.command.ICommand;
-import com.thebubblenetwork.bubblebungee.command.commands.FriendCommand;
-import com.thebubblenetwork.bubblebungee.command.commands.PlugmanCommand;
-import com.thebubblenetwork.bubblebungee.command.commands.RankCommand;
-import com.thebubblenetwork.bubblebungee.command.commands.ReloadCommand;
+import com.thebubblenetwork.bubblebungee.command.commands.*;
 import com.thebubblenetwork.bubblebungee.servermanager.BubbleServer;
 import com.thebubblenetwork.bubblebungee.servermanager.ServerManager;
 import de.mickare.xserver.XServerPlugin;
@@ -21,15 +17,11 @@ import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.Plugin;
-import net.md_5.bungee.api.plugin.PluginManager;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -77,7 +69,7 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
             loadRanks();
         } catch (Exception e) {
             logSevere(e.getMessage());
-            endSetup("Failed to setup map");
+            endSetup("Failed to load ranks");
         }
 
         logInfo("Loaded ranks");
@@ -97,6 +89,8 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
         registerCommand(new ReloadCommand("b",getPlugman()));
         registerCommand(new FriendCommand());
         registerCommand(new RankCommand());
+        registerCommand(new WhoisCommand());
+        registerCommand(new TokenCommand());
 
         logInfo("Commands have been created");
 
@@ -233,7 +227,7 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
 
     public void endSetup(String s) throws RuntimeException {
         getPlugin().getProxy().stop(s);
-        throw new RuntimeException(s);
+        throw new IllegalArgumentException(s);
     }
 
     public Logger getLogger(){
@@ -260,15 +254,15 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
     public void loadRanks() throws SQLException, ClassNotFoundException {
         Rank.getRanks().clear();
         ResultSet set = SQLUtil.query(BubbleHubObject.getInstance().getConnection(), "ranks", "*", new SQLUtil.Where("1"));
-        Map<String, Map> map = new HashMap<>();
+        Map<String, Map<String,String>> map = new HashMap<>();
         while (set.next()) {
             String rankname = set.getString("rank");
-            Map currentmap = map.containsKey(rankname) ? map.get(rankname) : new HashMap();
+            Map<String,String> currentmap = map.containsKey(rankname) ? map.get(rankname) : new HashMap<String,String>();
             currentmap.put(set.getString("key"), set.getString("value"));
             map.put(rankname, currentmap);
         }
         set.close();
-        for (Map.Entry<String, Map> entry : map.entrySet()) {
+        for (Map.Entry<String, Map<String,String>> entry : map.entrySet()) {
             Rank.loadRank(entry.getKey(),entry.getValue());
             logInfo("Loaded rank: " + entry.getKey());
         }

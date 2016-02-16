@@ -3,6 +3,7 @@ package com.thebubblenetwork.bubblebungee.command;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.plugin.Command;
 
@@ -11,8 +12,8 @@ import java.util.logging.Level;
 public abstract class SimpleCommand extends Command implements ICommand{
 
     public static SimpleCommand asMirror(final ICommand command){
-        return new SimpleCommand(command.getName(),command.getIPermission(),command.getAliases()) {
-            public String Iexecute(CommandSender sender, String[] args) throws CommandException {
+        return new SimpleCommand(command.getName(),command.getIPermission(),command.getUsage(),command.getAliases()) {
+            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
                 return command.Iexecute(sender,args);
             }
         };
@@ -20,17 +21,22 @@ public abstract class SimpleCommand extends Command implements ICommand{
 
     private String permissionstring;
     private String usage;
+    private CommandException invalidusage;
 
-    public SimpleCommand(String name, String permission, String ... aliases) {
+    public SimpleCommand(String name, String permission,String usage, String ... aliases) {
         super(name,null,aliases);
         this.permissionstring = permission;
-        this.usage = "/" + name;
+        this.usage = usage;
+        invalidusage = new CommandException("Invalid usage: " + getUsage(),this);
     }
 
     public void execute(CommandSender commandSender, String[] strings) {
         try {
             if(getIPermission() != null && !commandSender.hasPermission(getIPermission()))throw new CommandException("You do not have permission for this command",this);
-            Iexecute(commandSender, strings);
+            BaseComponent b[] = Iexecute(commandSender, strings);
+            if(b != null){
+                commandSender.sendMessage(b);
+            }
         } catch (CommandException e) {
             commandSender.sendMessage(e.getResponse());
         } catch (IllegalArgumentException e){
@@ -43,7 +49,7 @@ public abstract class SimpleCommand extends Command implements ICommand{
         }
     }
 
-    public abstract String Iexecute(CommandSender sender, String[] args) throws CommandException;
+    public abstract BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException;
 
     public String getUsage() {
         return usage;
@@ -51,5 +57,9 @@ public abstract class SimpleCommand extends Command implements ICommand{
 
     public String getIPermission() {
         return permissionstring;
+    }
+
+    public CommandException invalidUsage(){
+        return invalidusage;
     }
 }

@@ -9,6 +9,8 @@ import com.thebubblenetwork.bubblebungee.command.ICommand;
 import com.thebubblenetwork.bubblebungee.command.SubCommand;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.plugin.Plugin;
 
 import java.io.File;
@@ -21,19 +23,23 @@ public class PlugmanCommand extends BaseCommand {
                 new ImmutableSet.Builder<ICommand>()
                         .add(new ReloadCommand("",plugman))
                         .add(new SubCommand("unload","bungeeplugman.unload","unload <plugin>") {
-                            public String Iexecute(CommandSender sender, String[] args) throws CommandException {
-                                if(args.length == 0)throw new CommandException("Invalid args " + getUsage(),this);
+                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                                if(args.length == 0)throw invalidUsage();
                                 String pluginname = args[0];
                                 Plugin plugin = plugman.get(pluginname);
                                 if(plugin == null)throw  new CommandException("Could not find a plugin with that name",this);
                                 pluginname = plugin.getDescription().getName();
                                 plugman.unload(plugin);
-                                return ChatColor.GREEN + "Unloaded " + pluginname + ", check console for errors";
+                                TextComponent c = new TextComponent("Unloaded " + pluginname + ", check console for errors");
+                                c.setColor(ChatColor.GREEN);
+                                c.setBold(true);
+                                c.setUnderlined(true);
+                                return new BaseComponent[]{c};
                             }
                         })
                         .add(new SubCommand("load","bungeeplugman.load","load <file>") {
-                            public String Iexecute(CommandSender sender, String[] args) throws CommandException {
-                                if(args.length == 0)throw new CommandException("Invalid args" + getUsage(),this);
+                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                                if(args.length == 0)throw invalidUsage();
                                 String filename = Joiner.on(" ").join(args);
                                 if(!filename.endsWith(".jar"))throw new CommandException("File must be a jar",this);
                                 String filepath = "plugins" + File.separator + filename;
@@ -41,7 +47,11 @@ public class PlugmanCommand extends BaseCommand {
                                 if(!file.isFile())throw new CommandException("File must be a jar",this);
                                 Plugin plugin = plugman.load(file);
                                 plugman.enable(plugin);
-                                return ChatColor.GREEN + "Plugin loaded, check console for errors";
+                                TextComponent c = new TextComponent("Plugin loaded, check console for errors");
+                                c.setColor(ChatColor.GREEN);
+                                c.setBold(true);
+                                c.setUnderlined(true);
+                                return new BaseComponent[]{c};
                             }
                         })
                         .build(),

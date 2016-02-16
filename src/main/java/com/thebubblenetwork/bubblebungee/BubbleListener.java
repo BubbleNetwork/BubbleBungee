@@ -123,7 +123,9 @@ public class BubbleListener implements Listener,PacketListener{
             name.setHoverEvent(clickhover);
             name.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND,"/msg " + proxiedPlayer.getName() + " "));
 
-            BaseComponent[] fullmsg = new ImmutableList.Builder<BaseComponent>().add(prefix).add(name).add(suffix).add(message).build().toArray(new BaseComponent[0]);
+            TextComponent space = new TextComponent(" ");
+
+            BaseComponent[] fullmsg = new ImmutableList.Builder<BaseComponent>().add(prefix).add(space).add(name).add(suffix).add(space).add(message).build().toArray(new BaseComponent[0]);
 
             for(ProxiedPlayer target:proxiedPlayer.getServer().getInfo().getPlayers()){
                 target.sendMessage(ChatMessageType.CHAT,fullmsg);
@@ -138,15 +140,6 @@ public class BubbleListener implements Listener,PacketListener{
 
     private void withClick(BaseComponent[] components,ClickEvent event){
         for(BaseComponent component:components)component.setClickEvent(event);
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPreJoin(PreLoginEvent e){
-        /*
-        if(!e.getConnection().isOnlineMode()){
-            e.setCancelReason(ChatColor.RED + "Your account must be authenticated");
-            e.setCancelled(true);
-        }*/
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -183,10 +176,6 @@ public class BubbleListener implements Listener,PacketListener{
         if(connection.getVersion() != 47){
             description = ChatColor.DARK_RED + "You need MC 1.8";
         }
-        /*else if(!connection.isOnlineMode()){
-            description = ChatColor.DARK_RED + "You must be authenticated";
-            ping.setVersion(new ServerPing.Protocol("Authentication required",0));
-        }*/
         else if(bungee.getPlugin().getProxy().getOnlineCount() > MAXLIMIT){
             description += ChatColor.RED + "Donate to join when full";
             ping.setVersion(new ServerPing.Protocol("Server Full",-1));
@@ -196,7 +185,7 @@ public class BubbleListener implements Listener,PacketListener{
             description += line2;
         }
         players.setSample(sample.toArray(new ServerPing.PlayerInfo[0]));
-        ping.setDescription(line1 + "\n" + description);
+        ping.setDescription(line1 + description);
         ping.setPlayers(players);
         e.setResponse(ping);
     }
