@@ -1,7 +1,9 @@
 package com.thebubblenetwork.bubblebungee;
 
 import com.thebubblenetwork.api.global.data.PlayerData;
+import com.thebubblenetwork.api.global.player.BubblePlayer;
 import com.thebubblenetwork.api.global.plugin.BubbleHub;
+import com.thebubblenetwork.api.global.ranks.Rank;
 import com.thebubblenetwork.bubblebungee.servermanager.ServerManager;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -24,4 +26,6 @@ public interface IBubbleBungee extends BubbleHub<Plugin> {
     ServerManager getManager();
     P getPlugin();
     PlayerData loadData(UUID load) throws SQLException, ClassNotFoundException;
+    void updateRank(Rank r);
+    void updatePlayer(BubblePlayer p);
 }

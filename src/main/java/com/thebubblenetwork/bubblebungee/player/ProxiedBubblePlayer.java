@@ -1,5 +1,6 @@
 package com.thebubblenetwork.bubblebungee.player;
 
+import com.thebubblenetwork.api.global.data.InvalidBaseException;
 import com.thebubblenetwork.api.global.data.PlayerData;
 import com.thebubblenetwork.api.global.player.BubblePlayer;
 import com.thebubblenetwork.api.global.player.BubblePlayerObject;
@@ -55,14 +56,24 @@ public class ProxiedBubblePlayer extends BubblePlayerObject<ProxiedPlayer> imple
 
     public void setName(String name){
         this.name = name;
+        getData().set(PlayerData.NAME,name);
     }
 
     public String getName(){
         if(name == null){
             if(getPlayer() != null)setName(getPlayer().getName());
-            else throw new UnsupportedOperationException("Name is not set");
+            else try {
+                setName(getData().getString(PlayerData.NAME));
+            } catch (InvalidBaseException e) {
+                throw new UnsupportedOperationException(e);
+            }
         }
         return name;
+    }
+
+    @Override
+    public void update(){
+        BubbleBungee.getInstance().updatePlayer(this);
     }
 
     public void save(){

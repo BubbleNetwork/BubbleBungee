@@ -52,6 +52,10 @@ public class ServerManager {
         return null;
     }
 
+    public Set<BubbleServer> getServers(){
+        return servers;
+    }
+
     public BubbleServer load(XServer xserver,ServerInfo info){
         BubbleServer server = new BubbleServer(info,xserver);
         servers.add(server);
@@ -100,6 +104,13 @@ public class ServerManager {
     public BubbleServer getServer(XServer xserver){
         for(BubbleServer server:servers)
             if(server.getServer() == xserver)return server;
+        return null;
+    }
+
+    public BubbleServer getServer(ServerInfo info){
+        for(BubbleServer server:servers){
+            if(server.getInfo().getAddress() == info.getAddress())return server;
+        }
         return null;
     }
 }

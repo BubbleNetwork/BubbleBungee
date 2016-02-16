@@ -49,7 +49,7 @@ import java.util.concurrent.TimeUnit;
 public class BubbleListener implements Listener,PacketListener{
     private IBubbleBungee bungee;
     private static final String spacer = "\n";
-    private String line1 = spacer + ChatColor.AQUA + ChatColor.BOLD.toString() + "BubbleNetwork" + spacer;
+    private String line1 = ChatColor.AQUA + ChatColor.BOLD.toString() + "BubbleNetwork" + spacer;
     private String line2 = ChatColor.BLUE + " Come and join the fun!";
     private List<String> sample = Arrays.asList(
             ChatColor.AQUA + ChatColor.UNDERLINE.toString() + "BubbleNetwork",
@@ -73,11 +73,10 @@ public class BubbleListener implements Listener,PacketListener{
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onAuthorization(PermissionCheckEvent e){
-        if(e.hasPermission())return;
         CommandSender sender = e.getSender();
         if(sender instanceof ProxiedPlayer){
             ProxiedPlayer player = (ProxiedPlayer)sender;
-            BubblePlayer<ProxiedPlayer> bubblePlayer = ProxiedBubblePlayer.getObject(player.getUniqueId());
+            ProxiedBubblePlayer bubblePlayer = ProxiedBubblePlayer.getObject(player.getUniqueId());
             e.setHasPermission(bubblePlayer.isAuthorized(e.getPermission()));
         }
         else e.setHasPermission(true);
@@ -143,10 +142,11 @@ public class BubbleListener implements Listener,PacketListener{
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPreJoin(PreLoginEvent e){
+        /*
         if(!e.getConnection().isOnlineMode()){
             e.setCancelReason(ChatColor.RED + "Your account must be authenticated");
             e.setCancelled(true);
-        }
+        }*/
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -183,10 +183,10 @@ public class BubbleListener implements Listener,PacketListener{
         if(connection.getVersion() != 47){
             description = ChatColor.DARK_RED + "You need MC 1.8";
         }
-        else if(!connection.isOnlineMode()){
+        /*else if(!connection.isOnlineMode()){
             description = ChatColor.DARK_RED + "You must be authenticated";
             ping.setVersion(new ServerPing.Protocol("Authentication required",0));
-        }
+        }*/
         else if(bungee.getPlugin().getProxy().getOnlineCount() > MAXLIMIT){
             description += ChatColor.RED + "Donate to join when full";
             ping.setVersion(new ServerPing.Protocol("Server Full",-1));

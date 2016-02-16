@@ -13,7 +13,6 @@ import com.thebubblenetwork.bubblebungee.player.ProxiedBubblePlayer;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -28,7 +27,7 @@ import java.util.UUID;
 
 public class FriendCommand extends BaseCommand{
     private static void notSelf(ProxiedPlayer player1,ProxiedPlayer player2){
-        if(player1.getUniqueId() == player2.getUniqueId())throw new IllegalArgumentException("You may befriend yourself");
+        if(player1.getUniqueId() == player2.getUniqueId())throw new IllegalArgumentException("You may not befriend yourself");
     }
 
     private static ProxiedPlayer notConsole(CommandSender sender) throws CommandException{
@@ -134,7 +133,7 @@ public class FriendCommand extends BaseCommand{
                         .add(new SubCommand("add",null,"add <player>","rq") {
                             public String Iexecute(CommandSender sender, String[] args) throws CommandException {
                                 ProxiedPlayer playerPlayer = notConsole(sender);
-                                if(args.length == 0)throw new CommandException("Invalid usage: " + getUsage(),this);
+                                if(args.length == 0)throw new CommandException("Invalid usage",this);
                                 //Player requesting
                                 ProxiedBubblePlayer player = isPlayer(playerPlayer);
                                 ProxiedPlayer targetPlayer = ProxyServer.getInstance().getPlayer(args[0]);
@@ -197,13 +196,14 @@ public class FriendCommand extends BaseCommand{
                             public String Iexecute(CommandSender sender, String[] args) throws CommandException {
                                 ProxiedPlayer proxiedPlayer = notConsole(sender);
                                 ProxiedBubblePlayer bubblePlayer = isPlayer(proxiedPlayer);
-                                if(args.length == 0)throw new CommandException("Invalid usage: " + getUsage(),this);
+                                if(args.length == 0)throw new CommandException("Invalid usage",this);
                                 List<UUID> playerFriends = newList(bubblePlayer.getFriends());
                                 ProxiedBubblePlayer online = ProxiedBubblePlayer.getObject(args[0]);
                                 boolean forcesave = false;
                                 if(online == null){
                                     UUID u = getUUID(args[0]);
                                     if(u == null)throw new CommandException("Player not found",this);
+                                    if(u == proxiedPlayer.getUniqueId())throw new CommandException("You are not friends with yourself",this);
                                     if(!playerFriends.contains(u))throw new CommandException("You are not friends with this player",this);
                                     try {
                                         PlayerData manualget = BubbleBungee.getInstance().loadData(u);
@@ -214,6 +214,7 @@ public class FriendCommand extends BaseCommand{
                                     forcesave = true;
                                 }
                                 else {
+                                    if(online.getUUID() == proxiedPlayer.getUniqueId())throw new CommandException("You are not friends with yourself",this);
                                     if(!playerFriends.contains(online.getUUID()))throw new CommandException("You are not friends with this player",this);
                                     online.getPlayer().sendMessage(TextComponent.fromLegacyText(ChatColor.GOLD + "You are no longer friends with " + bubblePlayer.getNickName()));
                                 }

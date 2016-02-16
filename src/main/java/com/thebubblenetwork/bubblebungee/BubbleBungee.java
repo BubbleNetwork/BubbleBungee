@@ -1,16 +1,23 @@
 package com.thebubblenetwork.bubblebungee;
 
+import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshake.RankDataUpdate;
+import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.PlayerDataResponse;
 import com.thebubblenetwork.api.global.data.DataObject;
 import com.thebubblenetwork.api.global.data.PlayerData;
+import com.thebubblenetwork.api.global.data.RankData;
+import com.thebubblenetwork.api.global.player.BubblePlayer;
 import com.thebubblenetwork.api.global.plugin.BubbleHubObject;
 import com.thebubblenetwork.api.global.ranks.Rank;
 import com.thebubblenetwork.api.global.sql.SQLUtil;
 import com.thebubblenetwork.bubblebungee.command.ICommand;
 import com.thebubblenetwork.bubblebungee.command.commands.FriendCommand;
 import com.thebubblenetwork.bubblebungee.command.commands.PlugmanCommand;
+import com.thebubblenetwork.bubblebungee.command.commands.RankCommand;
 import com.thebubblenetwork.bubblebungee.command.commands.ReloadCommand;
+import com.thebubblenetwork.bubblebungee.servermanager.BubbleServer;
 import com.thebubblenetwork.bubblebungee.servermanager.ServerManager;
 import de.mickare.xserver.XServerPlugin;
+import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.Plugin;
@@ -89,6 +96,7 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
         registerCommand(new PlugmanCommand(getPlugman()));
         registerCommand(new ReloadCommand("b",getPlugman()));
         registerCommand(new FriendCommand());
+        registerCommand(new RankCommand());
 
         logInfo("Commands have been created");
 
@@ -103,6 +111,14 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
     }
 
     public void onBubbleDisable(){
+        for(Rank r:Rank.getRanks().values()){
+            try {
+                r.getData().save("ranks","rank",r.getName());
+            } catch (SQLException|ClassNotFoundException e) {
+                logSevere(e.getMessage());
+                logSevere("Error saving rank " + r.getName());
+            }
+        }
         setInstance(null);
         manager = null;
     }
@@ -185,6 +201,34 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
 
     public ProxiedPlayer getPlayer(UUID uuid) {
         return getPlugin().getProxy().getPlayer(uuid);
+    }
+
+    public void updateRank(Rank r){
+        RankDataUpdate update = new RankDataUpdate(r.getName(),r.getData().getRaw());
+        for(BubbleServer server:getManager().getServers()){
+            try {
+                getPacketHub().sendMessage(server.getServer(),update);
+            } catch (IOException e) {
+                logSevere(e.getMessage());
+                logSevere("Error sending rank update message to " + server);
+            }
+        }
+    }
+
+    public void updatePlayer(BubblePlayer player){
+        PlayerDataResponse response = new PlayerDataResponse(player.getName(),player.getData().getRaw());
+        ProxiedPlayer proxiedPlayer = getPlugin().getProxy().getPlayer(player.getUUID());
+        if(proxiedPlayer != null){
+            ServerInfo info = proxiedPlayer.getServer().getInfo();
+            BubbleServer server = getManager().getServer(info);
+            if(server != null){
+                try {
+                    getPacketHub().sendMessage(server.getServer(),response);
+                } catch (IOException e) {
+                    logSevere("Error sending packet to update: " + e.getMessage());
+                }
+            }
+        }
     }
 
     public void endSetup(String s) throws RuntimeException {
