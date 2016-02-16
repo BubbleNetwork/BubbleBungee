@@ -111,7 +111,7 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
     }
 
     public void onBubbleDisable(){
-        for(Rank r:Rank.getRanks().values()){
+        for(Rank r:Rank.getRanks()){
             try {
                 r.getData().save("ranks","rank",r.getName());
             } catch (SQLException|ClassNotFoundException e) {

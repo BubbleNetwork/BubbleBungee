@@ -82,7 +82,7 @@ public class RankCommand extends BaseCommand{
                         .add(new SubCommand("list","rankmanager.list","list","listranks","groups","ranks") {
                             public String Iexecute(CommandSender sender, String[] args) throws CommandException {
                                 String s = ChatColor.GOLD + "Ranks: ";
-                                for(Rank r:Rank.getRanks().values()){
+                                for(Rank r:Rank.getRanks()){
                                     s += "\n" + r.getName();
                                 }
                                 return s;
@@ -94,8 +94,9 @@ public class RankCommand extends BaseCommand{
                                 String rankname = args[0];
                                 Rank r = Rank.getRank(rankname);
                                 if(r == null){
-                                    r = new Rank(rankname,new RankData(new HashMap()));
-                                    Rank.getRanks().put(rankname,r);
+                                    Rank.loadRank(rankname,new HashMap());
+                                    r = Rank.getRank(rankname);
+                                    if(r == null)throw new CommandException("Rank not found",this);
                                 }
                                 String prefix = Joiner.on(" ").join(new ArgTrimmer<>(String.class,args).trim(1));
                                 r.setPrefix(prefix);
@@ -109,8 +110,9 @@ public class RankCommand extends BaseCommand{
                                 String rankname = args[0];
                                 Rank r = Rank.getRank(rankname);
                                 if(r == null){
-                                    r = new Rank(rankname,new RankData(new HashMap()));
-                                    Rank.getRanks().put(rankname,r);
+                                    Rank.loadRank(rankname,new HashMap());
+                                    r = Rank.getRank(rankname);
+                                    if(r == null)throw new CommandException("Rank not found",this);
                                 }
                                 String suffix = Joiner.on(" ").join(new ArgTrimmer<>(String.class,args).trim(1));
                                 r.setSuffix(suffix);
@@ -124,8 +126,9 @@ public class RankCommand extends BaseCommand{
                                 String rankname = args[0];
                                 Rank r = Rank.getRank(rankname);
                                 if(r == null){
-                                    r = new Rank(rankname,new RankData(new HashMap()));
-                                    Rank.getRanks().put(rankname,r);
+                                    Rank.loadRank(rankname,new HashMap());
+                                    r = Rank.getRank(rankname);
+                                    if(r == null)throw new CommandException("Rank not found",this);
                                 }
                                 String toname = args[1];
                                 Rank toset;
@@ -146,8 +149,9 @@ public class RankCommand extends BaseCommand{
                                 String rankname = args[0];
                                 Rank r = Rank.getRank(rankname);
                                 if(r == null){
-                                    r = new Rank(rankname,new RankData(new HashMap()));
-                                    Rank.getRanks().put(rankname,r);
+                                    Rank.loadRank(rankname,new HashMap());
+                                    r = Rank.getRank(rankname);
+                                    if(r == null)throw new CommandException("Rank not found",this);
                                 }
                                 String permission = args[1].toLowerCase();
                                 boolean haspermission = true;

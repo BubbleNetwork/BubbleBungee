@@ -262,7 +262,7 @@ public class BubbleListener implements Listener,PacketListener{
             AssignMessage assignMessage = (AssignMessage)message;
             getBungee().getManager().create(info.getServer(),assignMessage.getWrapperType(),assignMessage.getId());
             getBungee().logInfo("Created server " + info.getServer().getHost() + " to " + assignMessage.getWrapperType().getName() + String.valueOf(assignMessage.getId()));
-            for(Rank r:Rank.getRanks().values()){
+            for(Rank r:Rank.getRanks()){
                 sendPacketSafe(info.getServer(),new RankDataUpdate(r.getName(),r.getData().getRaw()));
             }
         }
