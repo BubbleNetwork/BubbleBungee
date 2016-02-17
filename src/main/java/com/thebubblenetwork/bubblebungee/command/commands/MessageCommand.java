@@ -37,7 +37,7 @@ public class MessageCommand extends SimpleCommand{
         String target = args[0];
         ProxiedBubblePlayer player = ProxiedBubblePlayer.getObject(target);
         if(player == null)throw new CommandException("Player not found",this);
-        String message = Joiner.on(" ").join(new ArgTrimmer<>(String.class,args).trim(2));
+        String message = Joiner.on(" ").join(new ArgTrimmer<>(String.class,args).trim(1));
         TextComponent space = new TextComponent(" ");
         TextComponent senderprefix = new TextComponent("[You -> " + player.getNickName() + "]");
         String name = sender.getName();
@@ -45,11 +45,9 @@ public class MessageCommand extends SimpleCommand{
             ProxiedBubblePlayer senderplayer = ProxiedBubblePlayer.getObject(((ProxiedPlayer) sender).getUniqueId());
             name = senderplayer.getNickName();
         }
-        TextComponent playerprefix = new TextComponent("[" + name + " -> You");
+        TextComponent playerprefix = new TextComponent("[" +  name + " -> You]");
         playerprefix.setColor(ChatColor.GOLD);
         senderprefix.setColor(ChatColor.GOLD);
-        playerprefix.setBold(true);
-        senderprefix.setBold(true);
         HoverEvent messageprefixhover = new HoverEvent(HoverEvent.Action.SHOW_TEXT,TextComponent.fromLegacyText(ChatColor.GOLD + "Send a message with " + getUsage()));
         playerprefix.setHoverEvent(messageprefixhover);
         senderprefix.setHoverEvent(messageprefixhover);
@@ -72,13 +70,5 @@ public class MessageCommand extends SimpleCommand{
             player.getPlayer().sendMessage(playerprefix,space,messagetext);
         }
         return new BaseComponent[]{senderprefix,space,messagetext};
-    }
-
-    private void withHover(BaseComponent[] components,HoverEvent event){
-        for(BaseComponent component:components)component.setHoverEvent(event);
-    }
-
-    private void withClick(BaseComponent[] components,ClickEvent event){
-        for(BaseComponent component:components)component.setClickEvent(event);
     }
 }
