@@ -210,6 +210,9 @@ public class FriendCommand extends BaseCommand{
                                 for(UUID u:bubblePlayer.getFriends()){
                                     BaseComponent[] name = FriendCommand.getPlayingInformation(u);
                                     if(name != null){
+                                        TextComponent newline = new TextComponent("\n - ");
+                                        newline.setColor(ChatColor.GOLD);
+                                        components.add(newline);
                                         components.add(name);
                                     }
                                 }

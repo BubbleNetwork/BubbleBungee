@@ -95,6 +95,7 @@ public class RankCommand extends BaseCommand{
                                     TextComponent rankcomponent = new TextComponent(r.getName());
                                     rankcomponent.setColor(ChatColor.GOLD);
                                     rankcomponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,TextComponent.fromLegacyText(r.getPrefix())));
+                                    componentBuilder.add(rankcomponent);
                                 }
                                 return componentBuilder.build().toArray(new BaseComponent[0]);
                             }
