@@ -366,7 +366,7 @@ public class RankCommand extends BaseCommand{
                             }
                         })
                         .build()
-                ,"groupmanager","pex","permissionsex","ranks","rmanager");
+                ,"groupmanager","pex","permissionsex","ranks","rmanager","rank","ranksmanager");
     }
 
     private static void saveRank(Rank r){

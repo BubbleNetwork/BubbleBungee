@@ -28,4 +28,5 @@ public interface IBubbleBungee extends BubbleHub<Plugin> {
     PlayerData loadData(UUID load) throws SQLException, ClassNotFoundException;
     void updateRank(Rank r);
     void updatePlayer(BubblePlayer p);
+    BubbleListener getListener();
 }

@@ -91,6 +91,7 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
         registerCommand(new RankCommand());
         registerCommand(new WhoisCommand());
         registerCommand(new TokenCommand());
+        registerCommand(new MessageCommand());
 
         logInfo("Commands have been created");
 
@@ -272,6 +273,10 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
         Plugin p = getPlugin().getProxy().getPluginManager().getPlugin("XServerProxy");
         if(p == null)endSetup("Could not find XServerProxy");
         return (XServerPlugin) p;
+    }
+
+    public BubbleListener getListener(){
+        return listener;
     }
 
     public File getReplace() {

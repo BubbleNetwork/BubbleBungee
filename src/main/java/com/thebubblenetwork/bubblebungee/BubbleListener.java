@@ -57,7 +57,7 @@ public class BubbleListener implements Listener,PacketListener{
             ChatColor.BLUE + "Site " + ChatColor.GRAY + ChatColor.ITALIC.toString() + "thebubblenetwork.com"
     );
     private final String errormsg = ChatColor.RED + "An internal error has occurred please report this to @ExtendObject";
-    private final DateFormat format = new SimpleDateFormat("hh:mm:ss");
+    public final DateFormat format = new SimpleDateFormat("hh:mm:ss");
 
     private static final int MAXLIMIT = 5000;
 
@@ -121,7 +121,7 @@ public class BubbleListener implements Listener,PacketListener{
 
             TextComponent name = new TextComponent(proxiedBubblePlayer.getNickName());
             name.setHoverEvent(clickhover);
-            name.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND,"/msg " + proxiedPlayer.getName() + " "));
+            name.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND,"/msg " + proxiedBubblePlayer.getNickName() + " "));
 
             TextComponent space = new TextComponent(" ");
 

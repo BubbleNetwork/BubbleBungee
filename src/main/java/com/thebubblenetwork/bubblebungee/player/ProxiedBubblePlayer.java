@@ -45,6 +45,16 @@ public class ProxiedBubblePlayer extends BubblePlayerObject<ProxiedPlayer> imple
                 }
             }
         }
+        for(BubblePlayer player:getPlayerObjectMap().values()){
+            if(player instanceof ProxiedBubblePlayer){
+                ProxiedBubblePlayer proxiedBubblePlayer = (ProxiedBubblePlayer)player;
+                try{
+                    if(proxiedBubblePlayer.getNickName() != null && proxiedBubblePlayer.getNickName().equalsIgnoreCase(name))return proxiedBubblePlayer;
+                }
+                catch (UnsupportedOperationException ex){
+                }
+            }
+        }
         return null;
     }
 
