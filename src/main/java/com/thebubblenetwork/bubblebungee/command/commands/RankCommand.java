@@ -205,6 +205,7 @@ public class RankCommand extends BaseCommand{
                                 if(r == null){
                                     throw new CommandException("Could not find a rank with this name",this);
                                 }
+                                HoverEvent event = new HoverEvent(HoverEvent.Action.SHOW_TEXT,TextComponent.fromLegacyText(ChatColor.RED + "All rank information about " + r.getName()));
                                 String information = ChatColor.GOLD + "Rank information: " + ChatColor.RED + r.getName();
                                 information += "\n" + ChatColor.GOLD + "Prefix: \'" + ChatColor.translateAlternateColorCodes('&',r.getPrefix()) + ChatColor.GOLD + "\'";
                                 information += "\n" + ChatColor.GOLD + "Suffix: \'" + ChatColor.translateAlternateColorCodes('&',r.getSuffix()) + ChatColor.GOLD + "\'";
@@ -220,7 +221,9 @@ public class RankCommand extends BaseCommand{
                                     }
                                     information += "\n" + ChatColor.GOLD + " - " + key + " (" + String.valueOf(value) + ")";
                                 }
-                                return TextComponent.fromLegacyText(information);
+                                BaseComponent[] baseComponents = TextComponent.fromLegacyText(information);
+                                for(BaseComponent c:baseComponents)c.setHoverEvent(event);
+                                return baseComponents;
                             }
                         })
                         .add(new WhoisCommand())

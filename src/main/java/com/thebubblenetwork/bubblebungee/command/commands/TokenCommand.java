@@ -34,7 +34,6 @@ public class TokenCommand extends SimpleCommand{
             c.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,TextComponent.fromLegacyText(ChatColor.GOLD + "The current amount of tokens you have")));
             amt = new TextComponent(String.valueOf(bubblePlayer.getTokens()));
             amt.setColor(ChatColor.RED);
-            amt.setBold(true);
         }
         else{
             if(args.length == 0)throw invalidUsage();
@@ -43,11 +42,9 @@ public class TokenCommand extends SimpleCommand{
             if(target == null)throw new CommandException("Player not found",this);
             c = new TextComponent(target.getNickName() + "\'s tokens: ");
             c.setColor(ChatColor.GOLD);
-            c.setUnderlined(true);
             c.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,TextComponent.fromLegacyText(ChatColor.GOLD + "The current amount of tokens " + target.getNickName() + " has")));
             amt = new TextComponent(String.valueOf(target.getTokens()));
             amt.setColor(ChatColor.RED);
-            amt.setBold(true);
         }
         return new BaseComponent[]{c,amt};
     }
