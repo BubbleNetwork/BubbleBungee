@@ -29,4 +29,5 @@ public interface IBubbleBungee extends BubbleHub<Plugin> {
     void updateRank(Rank r);
     void updatePlayer(BubblePlayer p);
     BubbleListener getListener();
+    BungeePlugman getPlugman();
 }

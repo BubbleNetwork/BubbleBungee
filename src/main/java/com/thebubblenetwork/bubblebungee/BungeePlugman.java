@@ -76,6 +76,10 @@ public class BungeePlugman implements Plugman<Plugin>{
         server.getLogger().log(Level.INFO , "Successfully unloaded {0}",new Object[]{name});
     }
 
+    public Collection<Command> getCommands(Plugin p){
+        return commandsByPlugin().get(p);
+    }
+
     public Plugin load(File file) {
         if(file.isFile() && file.getName().endsWith(".jar")) {
             PluginDescription description;
