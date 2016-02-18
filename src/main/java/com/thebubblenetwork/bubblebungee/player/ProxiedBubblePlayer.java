@@ -5,6 +5,7 @@ import com.thebubblenetwork.api.global.data.PlayerData;
 import com.thebubblenetwork.api.global.player.BubblePlayer;
 import com.thebubblenetwork.api.global.player.BubblePlayerObject;
 import com.thebubblenetwork.bubblebungee.BubbleBungee;
+import com.thebubblenetwork.bubblebungee.party.Party;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
 import java.sql.SQLException;
@@ -63,6 +64,7 @@ public class ProxiedBubblePlayer extends BubblePlayerObject<ProxiedPlayer> imple
     }
 
     private String name;
+    private Party party = null;
 
     public void setName(String name){
         this.name = name;
@@ -93,5 +95,24 @@ public class ProxiedBubblePlayer extends BubblePlayerObject<ProxiedPlayer> imple
             BubbleBungee.getInstance().logSevere(e.getMessage());
             BubbleBungee.getInstance().logSevere("Could not save data of " + getName());
         }
+    }
+
+    public Party getParty() {
+        return party;
+    }
+
+    public void setParty(Party party) {
+        if(this.party != null){
+            if(this.party.isLeader(getPlayer())){
+                this.party.disband(getNickName() + " disbanded the party");
+            }
+            else if(this.party.isMember(getPlayer())){
+                this.party.removeMember(getPlayer(),getNickName() + " left the party");
+            }
+            else if(this.party.isInvited(getPlayer())){
+                this.party.cancelInvite(getPlayer(),getNickName() + " denied the invite");
+            }
+        }
+        this.party = party;
     }
 }

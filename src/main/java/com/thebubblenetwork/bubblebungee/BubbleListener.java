@@ -159,6 +159,7 @@ public class BubbleListener implements Listener,PacketListener{
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onQuit(PlayerDisconnectEvent e){
         ProxiedBubblePlayer player = (ProxiedBubblePlayer) ProxiedBubblePlayer.getPlayerObjectMap().remove(e.getPlayer().getUniqueId());
+        player.setParty(null);
         player.save();
     }
 
