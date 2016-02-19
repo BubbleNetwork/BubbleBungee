@@ -29,7 +29,7 @@ public class PartyCommand extends BaseCommand{
 
     public PartyCommand() {
         super("party", null, new ImmutableSet.Builder<ICommand>()
-                .add(new SubCommand("invite",null,"invite <player>","add") {
+                .add(new SubCommand("invite",null,"invite <player>","add","create") {
                     public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
                         ProxiedPlayer player = notConsole(sender);
                         if(args.length == 0)throw invalidUsage();
@@ -154,6 +154,30 @@ public class PartyCommand extends BaseCommand{
                         bubblePlayer.setParty(null);
                         p.removeMember(player, bubblePlayer.getNickName() + " left the party");
                         return new ImmutableSet.Builder<BaseComponent>().add(Party.prefix).add(TextComponent.fromLegacyText(ChatColor.GOLD + "You successfully left the party")).build().toArray(new BaseComponent[0]);
+                    }
+                })
+                .add(new SubCommand("join",null,"join <party>") {
+                    public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                        ProxiedPlayer player = notConsole(sender);
+                        if(args.length == 0)throw invalidUsage();
+                        ProxiedBubblePlayer bubblePlayer = ProxiedBubblePlayer.getObject(player.getUniqueId());
+                        Party p = bubblePlayer.getParty();
+                        if(p != null && p.isMember(player) && !(p.isLeader(player) && p.getMembers().size() < 2)){
+                            throw new CommandException("You must leave your current party first",this);
+                        }
+                        ProxiedBubblePlayer target = ProxiedBubblePlayer.getObject(args[0]);
+                        if(target == null)throw new CommandException("Player not found",this);
+                        p = target.getParty();
+                        if(p == null)throw new CommandException("Party not found",this);
+                        if(!p.isInvited(player)){
+                            p.broadcast(TextComponent.fromLegacyText(ChatColor.GOLD + bubblePlayer.getNickName() + " tried to join"));
+                            throw new CommandException("You're not invited to this party",this);
+                        }
+                        bubblePlayer.setParty(p);
+                        p.addMember(player,bubblePlayer.getNickName() + " joined the party");
+                        ProxiedBubblePlayer leader = ProxiedBubblePlayer.getObject(target.getUUID());
+                        if(leader == null)leader = target;
+                        return new ImmutableSet.Builder<BaseComponent>().add(Party.prefix).add(TextComponent.fromLegacyText(ChatColor.GOLD + "You successfully joined the party of " + leader.getNickName())).build().toArray(new BaseComponent[0]);
                     }
                 })
                 .build(),
