@@ -13,7 +13,6 @@ import com.thebubblenetwork.bubblebungee.command.SubCommand;
 import com.thebubblenetwork.bubblebungee.player.ProxiedBubblePlayer;
 import com.thebubblenetwork.bubblebungee.servermanager.BubbleServer;
 import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -24,7 +23,10 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 
 public class FriendCommand extends BaseCommand{
     private static void notSelf(ProxiedPlayer player1,ProxiedPlayer player2){

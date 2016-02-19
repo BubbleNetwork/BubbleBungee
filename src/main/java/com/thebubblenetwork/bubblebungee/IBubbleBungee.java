@@ -5,15 +5,10 @@ import com.thebubblenetwork.api.global.player.BubblePlayer;
 import com.thebubblenetwork.api.global.plugin.BubbleHub;
 import com.thebubblenetwork.api.global.ranks.Rank;
 import com.thebubblenetwork.bubblebungee.servermanager.ServerManager;
-import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
-import net.md_5.bungee.api.plugin.PluginDescription;
 
-import java.io.File;
 import java.sql.SQLException;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 /**
  * The Bubble Network 2016

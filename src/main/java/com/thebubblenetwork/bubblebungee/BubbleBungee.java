@@ -93,6 +93,8 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
         registerCommand(new TokenCommand());
         registerCommand(new MessageCommand());
         registerCommand(new SetTokenCommand());
+        registerCommand(new PartyCommand());
+        registerCommand(new HelpCommand());
 
         logInfo("Commands have been created");
 

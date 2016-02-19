@@ -6,7 +6,6 @@ import com.thebubblenetwork.bubblebungee.IBubbleBungee;
 import de.mickare.xserver.net.XServer;
 import net.md_5.bungee.api.config.ServerInfo;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.HashSet;
 import java.util.Set;

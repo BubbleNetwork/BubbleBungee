@@ -1,6 +1,5 @@
 package com.thebubblenetwork.bubblebungee.command.commands;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.thebubblenetwork.bubblebungee.BubbleBungee;
 import com.thebubblenetwork.bubblebungee.command.CommandException;
@@ -8,7 +7,6 @@ import com.thebubblenetwork.bubblebungee.command.ICommand;
 import com.thebubblenetwork.bubblebungee.command.SimpleCommand;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
-import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -33,7 +31,7 @@ public class HelpCommand extends SimpleCommand{
             if(c instanceof ICommand) {
                 ICommand iCommand = (ICommand)c;
                 if(iCommand.getIPermission() == null || sender.hasPermission(iCommand.getIPermission())){
-                    TextComponent component = new TextComponent(" - " + iCommand.getUsage());
+                    TextComponent component = new TextComponent("\n - " + iCommand.getUsage());
                     component.setColor(ChatColor.GOLD);
                     component.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND,iCommand.getUsage()));
                     String command = iCommand.getName();

@@ -9,8 +9,6 @@ import com.thebubblenetwork.bubblebungee.party.Party;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 /**

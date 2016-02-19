@@ -1,18 +1,14 @@
 package com.thebubblenetwork.bubblebungee.command.commands;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-import com.thebubblenetwork.api.global.data.InvalidBaseException;
 import com.thebubblenetwork.api.global.java.ArgTrimmer;
 import com.thebubblenetwork.api.global.ranks.Rank;
 import com.thebubblenetwork.bubblebungee.BubbleBungee;
-import com.thebubblenetwork.bubblebungee.BubbleListener;
 import com.thebubblenetwork.bubblebungee.command.CommandException;
 import com.thebubblenetwork.bubblebungee.command.SimpleCommand;
 import com.thebubblenetwork.bubblebungee.player.ProxiedBubblePlayer;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
-import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;

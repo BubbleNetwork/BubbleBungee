@@ -23,7 +23,7 @@ public class ReloadCommand extends SimpleCommand{
     private BungeePlugman plugman;
 
     public ReloadCommand(String prefix,BungeePlugman plugman) {
-        super(prefix + "reload", "bungeeplugman.reloadall","reload",prefix + "rl");
+        super(prefix + "reload", "bungeeplugman.reloadall","/" + prefix + "reload",prefix + "rl");
         this.plugman = plugman;
     }
 

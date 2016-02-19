@@ -21,7 +21,7 @@ import java.util.UUID;
  */
 public class WhoisCommand extends SimpleCommand{
     public WhoisCommand(){
-        super("whois","rankmanager.whois","whois <player>","show","who");
+        super("whois","rankmanager.whois","/whois <player>","show","who");
     }
 
     public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {

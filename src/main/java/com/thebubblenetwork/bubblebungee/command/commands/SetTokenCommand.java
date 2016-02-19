@@ -10,7 +10,6 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 
-import java.sql.SQLException;
 import java.util.UUID;
 
 /**
@@ -18,7 +17,7 @@ import java.util.UUID;
  */
 public class SetTokenCommand extends SimpleCommand{
     public SetTokenCommand() {
-        super("setokens", "token.settokens", "/settokens <player> <tokens>", "settoken");
+        super("settokens", "token.settokens", "/settokens <player> <tokens>", "settoken");
     }
 
     public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {

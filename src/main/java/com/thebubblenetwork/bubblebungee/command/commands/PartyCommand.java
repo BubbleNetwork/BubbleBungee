@@ -122,9 +122,9 @@ public class PartyCommand extends BaseCommand{
                         ProxiedPlayer player = notConsole(sender);
                         ProxiedBubblePlayer bubblePlayer = ProxiedBubblePlayer.getObject(player.getUniqueId());
                         Party p = bubblePlayer.getParty();
-                        if(p == null){
-                            p = new Party(player);
-                            bubblePlayer.setParty(p);
+                        if(p == null || !p.isMember(player) || (p.isLeader(player) && p.getMembers().size() < 2)){
+                            bubblePlayer.setParty(null);
+                            throw new CommandException("You aren't in a party",this);
                         }
                         if(!p.isLeader(player)){
                             throw new CommandException("You are not leader of this party",this);
@@ -138,17 +138,14 @@ public class PartyCommand extends BaseCommand{
                         ProxiedPlayer player = notConsole(sender);
                         ProxiedBubblePlayer bubblePlayer = ProxiedBubblePlayer.getObject(player.getUniqueId());
                         Party p = bubblePlayer.getParty();
-                        if(p == null){
+                        if(p == null || !p.isMember(player) || (p.isLeader(player) && p.getMembers().size() < 2)){
+                            bubblePlayer.setParty(null);
                             throw new CommandException("You aren't in a party",this);
                         }
                         if(!p.isMember(player)){
                             throw new CommandException("You are not a member of this party",this);
                         }
                         if(p.isLeader(player)){
-                            if(p.getMembers().size() < 2){
-                                bubblePlayer.setParty(null);
-                                throw new CommandException("You are not in a party",this);
-                            }
                             throw new CommandException("You are leader of this party, use /party disband",this);
                         }
                         bubblePlayer.setParty(null);
@@ -178,6 +175,16 @@ public class PartyCommand extends BaseCommand{
                         ProxiedBubblePlayer leader = ProxiedBubblePlayer.getObject(target.getUUID());
                         if(leader == null)leader = target;
                         return new ImmutableSet.Builder<BaseComponent>().add(Party.prefix).add(TextComponent.fromLegacyText(ChatColor.GOLD + "You successfully joined the party of " + leader.getNickName())).build().toArray(new BaseComponent[0]);
+                    }
+                })
+                .add(new SubCommand("info",null,"info [other]","list","show","who") {
+                    public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                        if(sender instanceof ProxiedPlayer && args.length == 0){
+
+                            return new BaseComponent[0];
+                        }
+                        if(args.length == 0)throw invalidUsage();
+                        return new BaseComponent[0];
                     }
                 })
                 .build(),

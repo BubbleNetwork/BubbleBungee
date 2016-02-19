@@ -92,7 +92,7 @@ public class RankCommand extends BaseCommand{
                                 component.setBold(true);
                                 componentBuilder.add(component);
                                 for(Rank r:Rank.getRanks()){
-                                    TextComponent rankcomponent = new TextComponent(r.getName());
+                                    TextComponent rankcomponent = new TextComponent("\n - " + r.getName());
                                     rankcomponent.setColor(ChatColor.GOLD);
                                     rankcomponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,TextComponent.fromLegacyText(r.getPrefix())));
                                     componentBuilder.add(rankcomponent);
@@ -338,12 +338,14 @@ public class RankCommand extends BaseCommand{
                                 return TextComponent.fromLegacyText(ChatColor.GOLD + "Successfully deleted the rank \'" + r.getName() + "\'");
                             }
                         })
-                        .add(new SubCommand("createrank","rankmanager.createrank","createrank <rank>","creategroup") {
+                        .add(new SubCommand("createrank","rankmanager.createrank","createrank <rank>","creategroup","create") {
                             public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
                                 if(args.length == 0)throw invalidUsage();
                                 String rankname = args[0];
                                 if(Rank.getRank(rankname) != null)throw new CommandException("This rank has already been created",this);
-                                Rank.loadRank(rankname,new ImmutableMap.Builder<String,String>().put("default",String.valueOf(true)).build());
+                                Map<String,String> map = new HashMap<>();
+                                map.put("default",String.valueOf(false));
+                                Rank.loadRank(rankname,map);
                                 return TextComponent.fromLegacyText(ChatColor.GOLD + "Successfully created a rank with the name \'" + rankname + "\'");
                             }
                         })
