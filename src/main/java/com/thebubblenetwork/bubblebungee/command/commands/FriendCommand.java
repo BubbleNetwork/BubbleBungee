@@ -53,7 +53,7 @@ public class FriendCommand extends BaseCommand{
     private static BaseComponent[] getPlayingInformation(UUID u){
         ProxiedBubblePlayer player;
         if((player = ProxiedBubblePlayer.getObject(u)) != null){
-            BaseComponent[] info  = TextComponent.fromLegacyText(ChatColor.GOLD + player.getNickName() + ChatColor.GREEN + " (Online)");
+            BaseComponent[] info  = TextComponent.fromLegacyText(ChatColor.GOLD + player.getNickName() + ChatColor.GREEN + " (Online) ");
             ProxiedPlayer proxiedPlayer = player.getPlayer();
             if(proxiedPlayer != null) {
                 BubbleServer using = BubbleBungee.getInstance().getManager().getServer(proxiedPlayer.getServer().getInfo());
@@ -79,17 +79,16 @@ public class FriendCommand extends BaseCommand{
                 }
             });
             if(set.next()){
-                return TextComponent.fromLegacyText(ChatColor.GOLD + set.getString("value") + ChatColor.RED + " (Offline)");
+                return TextComponent.fromLegacyText(ChatColor.GOLD + set.getString("value") + ChatColor.RED + " (Offline) ");
             }
         }
         catch (SQLException|ClassNotFoundException ex){
         }
         finally {
-            if(set != null){
-                try{
+            if(set != null) {
+                try {
                     set.close();
-                }
-                catch (Exception ex){
+                } catch (Exception ex) {
 
                 }
             }
