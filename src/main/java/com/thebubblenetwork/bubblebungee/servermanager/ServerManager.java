@@ -1,14 +1,12 @@
 package com.thebubblenetwork.bubblebungee.servermanager;
 
 import com.thebubblenetwork.api.global.type.ServerType;
-import com.thebubblenetwork.api.global.type.ServerTypeObject;
 import com.thebubblenetwork.bubblebungee.IBubbleBungee;
 import de.mickare.xserver.net.XServer;
 import net.md_5.bungee.api.config.ServerInfo;
 
 import java.net.InetSocketAddress;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * The Bubble Network 2016
@@ -31,7 +29,7 @@ public class ServerManager {
     }
 
     public ServerType getType(ServerInfo info) throws Exception{
-        for(ServerType wrapper: ServerTypeObject.getTypes()){
+        for(ServerType wrapper: ServerType.getTypes()){
             if(info.getName().startsWith(wrapper.getPrefix()))return wrapper;
         }
         throw new Exception("No servertype found for " + info.getName());
@@ -74,30 +72,55 @@ public class ServerManager {
         servers.remove(server);
     }
 
-    public BubbleServer getAvailble(ServerType type){
+    public BubbleServer getAvailble(ServerType type,boolean joinable,boolean playercount){
         for(BubbleServer server:servers){
-            if (type == server.getType() && server.isJoinable() && server.getPlayercount() < server.getMaxplayercount()) {
+            if (type == server.getType() && (!joinable || server.isJoinable()) && (!playercount || server.getPlayercount() < server.getMaxplayercount())) {
                 return server;
             }
         }
         return null;
     }
 
-    public int getNewID(ServerType wrapper){
+
+    public int getNewID(ServerType type){
         int i = 0;
-        for(BubbleServer server:servers){
-            if(server.getType() == wrapper)i++;
+        BubbleServer server;
+        do{
+            i++;
+            server = getServer(type.getPrefix() + String.valueOf(i));
         }
-        return i+1;
+        while(server == null);
+        return i;
     }
 
     public ServerType getNeeded(){
-        try {
-            return ServerTypeObject.getType("Lobby");
-        } catch (Exception e) {
-            getBungee().logSevere(e.getMessage());
+        Map<ServerType,Integer> map = new HashMap<>();
+        for(ServerType type:ServerType.getTypes()){
+            map.put(type,0);
         }
-        return null;
+        for(BubbleServer server:getServers()){
+            map.put(server.getType(),map.get(server.getType())+1);
+        }
+        List<ServerType> needed = new ArrayList<>();
+        List<ServerType> softneeded = new ArrayList<>();
+        for(ServerType type:ServerType.getTypes()){
+            int current = map.get(type);
+            if(type.getLowlimit() > current){
+                needed.add(type);
+            }
+            else if(type.getHighlimit() < current){
+                softneeded.add(type);
+            }
+        }
+        if(needed.size() > 0){
+            Collections.shuffle(needed);
+            return needed.get(0);
+        }
+        if(softneeded.size() > 0){
+            Collections.shuffle(softneeded);
+            return softneeded.get(0);
+        }
+        throw new IllegalArgumentException("No servers needed");
     }
 
     public BubbleServer getServer(XServer xserver){

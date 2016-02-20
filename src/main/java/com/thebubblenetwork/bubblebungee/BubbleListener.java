@@ -17,7 +17,6 @@ import com.thebubblenetwork.api.global.player.BubblePlayer;
 import com.thebubblenetwork.api.global.plugin.BubbleHubObject;
 import com.thebubblenetwork.api.global.ranks.Rank;
 import com.thebubblenetwork.api.global.type.ServerType;
-import com.thebubblenetwork.api.global.type.ServerTypeObject;
 import com.thebubblenetwork.bubblebungee.player.ProxiedBubblePlayer;
 import com.thebubblenetwork.bubblebungee.servermanager.BubbleServer;
 import de.mickare.xserver.net.XServer;
@@ -200,7 +199,15 @@ public class BubbleListener implements Listener,PacketListener{
     @EventHandler
     public void onPostJoin(PostLoginEvent e){
         ProxiedPlayer p = e.getPlayer();
-        BubbleServer server = getBungee().getManager().getAvailble(ServerTypeObject.getType("Lobby"));
+        ServerType LOBBY = ServerType.getType("Lobby");
+        BubbleServer server = getBungee().getManager().getAvailble(LOBBY,true,true);
+        if(server == null){
+            server = getBungee().getManager().getAvailble(LOBBY,true,false);
+            if(server == null){
+                e.getPlayer().disconnect(TextComponent.fromLegacyText(ChatColor.RED + "No lobbies open at the moment"));
+                return;
+            }
+        }
         p.setReconnectServer(server.getInfo());
         p.connect(server.getInfo());
     }
