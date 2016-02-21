@@ -94,8 +94,8 @@ public class BubbleServer{
         this.joinable = joinable;
     }
 
-    protected void setInfo(ServerInfo info) throws Exception{
-        if(info.getAddress() != getInfo().getAddress())throw new Exception("Address may not change");
+    protected void setInfo(ServerInfo info){
+        if(info.getAddress() != getInfo().getAddress())throw new IllegalArgumentException("Address may not change");
         if(info.getName().equalsIgnoreCase(getName())){
             this.info = info;
             ProxyServer.getInstance().getServers().put(getName(),getInfo());

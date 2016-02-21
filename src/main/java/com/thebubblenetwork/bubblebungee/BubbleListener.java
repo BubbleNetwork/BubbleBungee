@@ -307,7 +307,12 @@ public class BubbleListener implements Listener,PacketListener{
     }
 
     public void onConnect(PacketInfo info) {
-        ServerType type = getBungee().getManager().getNeeded();
+        ServerType type = null;
+        try {
+            type = getBungee().getManager().getNeeded();
+        } catch (Throwable e) {
+            getBungee().logInfo("No servers needed");
+        }
         int id = getBungee().getManager().getNewID(type);
         AssignMessage message = new AssignMessage(id,type);
         sendPacketSafe(info.getServer(),message);

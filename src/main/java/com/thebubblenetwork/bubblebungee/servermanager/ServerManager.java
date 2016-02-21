@@ -87,9 +87,9 @@ public class ServerManager {
         BubbleServer server;
         do{
             i++;
-            server = getServer(type.getPrefix() + String.valueOf(i));
+            server = getServer(type,i);
         }
-        while(server == null);
+        while(server != null);
         return i;
     }
 
@@ -120,12 +120,18 @@ public class ServerManager {
             Collections.shuffle(softneeded);
             return softneeded.get(0);
         }
-        throw new IllegalArgumentException("No servers needed");
+        throw null;
     }
 
     public BubbleServer getServer(XServer xserver){
         for(BubbleServer server:servers)
             if(server.getServer() == xserver)return server;
+        return null;
+    }
+
+    public BubbleServer getServer(ServerType type,int id){
+        for(BubbleServer server:servers)
+            if(server.getType() == type && server.getId() == id)return server;
         return null;
     }
 
