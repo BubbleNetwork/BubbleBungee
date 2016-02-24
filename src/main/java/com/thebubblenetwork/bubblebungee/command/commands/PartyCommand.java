@@ -2,7 +2,6 @@ package com.thebubblenetwork.bubblebungee.command.commands;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
-import com.thebubblenetwork.bubblebungee.P;
 import com.thebubblenetwork.bubblebungee.command.BaseCommand;
 import com.thebubblenetwork.bubblebungee.command.CommandException;
 import com.thebubblenetwork.bubblebungee.command.ICommand;

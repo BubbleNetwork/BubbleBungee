@@ -8,9 +8,9 @@ import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshak
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshake.JoinableUpdate;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshake.PlayerCountUpdate;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshake.RankDataUpdate;
-import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.request.PlayerDataRequest;
-import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.request.ServerShutdownRequest;
+import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.request.*;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.PlayerDataResponse;
+import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.ServerListResponse;
 import com.thebubblenetwork.api.global.data.InvalidBaseException;
 import com.thebubblenetwork.api.global.data.PlayerData;
 import com.thebubblenetwork.api.global.player.BubblePlayer;
@@ -39,10 +39,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -196,6 +193,7 @@ public class BubbleListener implements Listener,PacketListener{
         e.setResponse(ping);
     }
 
+    /*
     @EventHandler
     public void onPostJoin(PostLoginEvent e){
         ProxiedPlayer p = e.getPlayer();
@@ -210,7 +208,7 @@ public class BubbleListener implements Listener,PacketListener{
         }
         p.setReconnectServer(server.getInfo());
         p.connect(server.getInfo());
-    }
+    }*/
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPreServerChange(ServerConnectEvent e){
@@ -240,6 +238,20 @@ public class BubbleListener implements Listener,PacketListener{
                     }
                     getBungee().logInfo("Server change authorized for " + player.getName());
                 }
+            }
+            else{
+                //LOGIN ?
+                ServerType LOBBY = ServerType.getType("Lobby");
+                server = getBungee().getManager().getAvailble(LOBBY,true,true);
+                if(server == null){
+                    server = getBungee().getManager().getAvailble(LOBBY,true,false);
+                    if(server == null){
+                        e.getPlayer().disconnect(TextComponent.fromLegacyText(ChatColor.RED + "No lobbies open at the moment"));
+                        return;
+                    }
+                }
+                player.setReconnectServer(server.getInfo());
+                e.setTarget(server.getInfo());
             }
         }
         else{
@@ -300,6 +312,45 @@ public class BubbleListener implements Listener,PacketListener{
                 server.setJoinable(update.isJoinable());
             }
             else getBungee().logSevere("Server not found when receiving incoming joinable update " + info.getServer().getName());
+        }
+        else if(message instanceof PlayerMoveRequest){
+            PlayerMoveRequest request = (PlayerMoveRequest)message;
+            ProxiedPlayer player = getBungee().getPlugin().getProxy().getPlayer(request.getName());
+            if(player != null){
+                BubbleServer server = getBungee().getManager().getServer(request.getTo());
+                if(server != null){
+                    player.connect(server.getInfo());
+                }
+                else getBungee().logSevere("Could not find bubbleserver " + request.getTo());
+            }
+            else getBungee().logSevere("Could not find player " + request.getName());
+        }
+        else if(message instanceof PlayerMoveTypeRequest){
+            PlayerMoveTypeRequest request = (PlayerMoveTypeRequest)message;
+            ProxiedPlayer player = getBungee().getPlugin().getProxy().getPlayer(request.getName());
+            if(request.getServerType() != null && player != null){
+                BubbleServer server = getBungee().getManager().getAvailble(request.getServerType(),true,true);
+                if(server == null){
+                    server = getBungee().getManager().getAvailble(request.getServerType(),true,false);
+                }
+                if(server == null){
+                    getBungee().logSevere("Couldn't find any server types for " + request.getServerType().getName());
+                    return;
+                }
+                player.connect(server.getInfo());
+            }
+            else getBungee().logSevere("Could proccess player request " + request.getName());
+        }
+        else if(message instanceof ServerListRequest){
+            ServerListRequest request = (ServerListRequest)message;
+            if(request.getServertype() != null) {
+                Map<String, String> datamap = new HashMap<>();
+                for (BubbleServer server : getBungee().getManager().getServers()) {
+                    if(request.getServertype() == server.getType())datamap.put(String.valueOf(server.getId()),String.valueOf(server.getPlayercount()));
+                }
+                sendPacketSafe(info.getServer(),new ServerListResponse(datamap,request.getServertype()));
+            }
+            else getBungee().logSevere("Could not find servertype for request");
         }
         else{
             getBungee().logSevere("Could not accept packet - " + message.getType().getName());
