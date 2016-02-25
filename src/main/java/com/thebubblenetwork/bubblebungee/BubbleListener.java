@@ -41,6 +41,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 /**
  * The Bubble Network 2016
@@ -242,10 +243,12 @@ public class BubbleListener implements Listener,PacketListener{
             else{
                 //LOGIN ?
                 ServerType LOBBY = ServerType.getType("Lobby");
+                if(LOBBY == null)throw new IllegalArgumentException("Lobby type doesn't exist");
                 server = getBungee().getManager().getAvailble(LOBBY,true,true);
                 if(server == null){
                     server = getBungee().getManager().getAvailble(LOBBY,true,false);
                     if(server == null){
+                        e.setCancelled(true);
                         e.getPlayer().disconnect(TextComponent.fromLegacyText(ChatColor.RED + "No lobbies open at the moment"));
                         return;
                     }
@@ -362,7 +365,7 @@ public class BubbleListener implements Listener,PacketListener{
         try {
             type = getBungee().getManager().getNeeded();
         } catch (Throwable e) {
-            getBungee().logInfo("No servers needed");
+            getBungee().getPlugin().getLogger().log(Level.WARNING,"No servers needed",e);
         }
         int id = getBungee().getManager().getNewID(type);
         AssignMessage message = new AssignMessage(id,type);
@@ -371,7 +374,13 @@ public class BubbleListener implements Listener,PacketListener{
     }
 
     public void onDisconnect(PacketInfo info){
-        getBungee().logInfo(info.getServer().getName() + " disconnect?");
+        BubbleServer server = getBungee().getManager().getServer(info.getServer());
+        if(server != null){
+            server.remove();
+        }
+        else{
+            //Probably already handled from the message
+        }
     }
 
     public void sendPacketSafe(final XServer server,final IPluginMessage message){

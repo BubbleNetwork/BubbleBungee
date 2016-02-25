@@ -7,6 +7,7 @@ import net.md_5.bungee.api.config.ServerInfo;
 
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.logging.Level;
 
 /**
  * The Bubble Network 2016
@@ -73,8 +74,9 @@ public class ServerManager {
     }
 
     public BubbleServer getAvailble(ServerType type,boolean joinable,boolean playercount){
-        for(BubbleServer server:servers){
-            if (type == server.getType() && (!joinable || server.isJoinable()) && (!playercount || server.getPlayercount() < server.getMaxplayercount())) {
+        if(type == null)throw new IllegalArgumentException("Type cannot be null");
+        for(BubbleServer server:getServers()){
+            if (server.getType() != null && type.getName().equals(server.getType().getName()) && (!joinable || server.isJoinable()) && (!playercount || server.getPlayercount() < server.getMaxplayercount())) {
                 return server;
             }
         }
@@ -94,38 +96,39 @@ public class ServerManager {
     }
 
     public ServerType getNeeded(){
-        Map<ServerType,Integer> map = new HashMap<>();
+        Map<String,Integer> map = new HashMap<>();
         for(ServerType type:ServerType.getTypes()){
-            map.put(type,0);
+            map.put(type.getName(),0);
         }
         for(BubbleServer server:getServers()){
-            map.put(server.getType(),map.get(server.getType())+1);
+            if(server.getType() != null)map.put(server.getType().getName(),map.get(server.getType().getName())+1);
+            else getBungee().getPlugin().getLogger().log(Level.WARNING,"{0} doesn't have a server type!",new Object[]{server.getServer().getName()});
         }
         List<ServerType> needed = new ArrayList<>();
         List<ServerType> softneeded = new ArrayList<>();
         for(ServerType type:ServerType.getTypes()){
-            int current = map.get(type);
+            int current = map.get(type.getName());
             if(type.getLowlimit() > current){
                 needed.add(type);
             }
-            else if(type.getHighlimit() < current){
+            if(type.getHighlimit() > current){
                 softneeded.add(type);
             }
         }
-        if(needed.size() > 0){
+        if(!needed.isEmpty()){
             Collections.shuffle(needed);
             return needed.get(0);
         }
-        if(softneeded.size() > 0){
+        if(!softneeded.isEmpty()){
             Collections.shuffle(softneeded);
             return softneeded.get(0);
         }
-        throw null;
+        throw new IllegalArgumentException("No servers needed");
     }
 
     public BubbleServer getServer(XServer xserver){
         for(BubbleServer server:servers)
-            if(server.getServer() == xserver)return server;
+            if(server.getServer().getHost().equals(xserver.getHost()) && server.getServer().getPort() == xserver.getPort())return server;
         return null;
     }
 
