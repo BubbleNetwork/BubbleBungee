@@ -1,5 +1,7 @@
 package com.thebubblenetwork.bubblebungee.servermanager;
 
+import com.google.common.collect.Iterables;
+import com.thebubblenetwork.api.global.bubblepackets.PacketInfo;
 import com.thebubblenetwork.api.global.type.ServerType;
 import com.thebubblenetwork.bubblebungee.IBubbleBungee;
 import de.mickare.xserver.net.XServer;
@@ -20,6 +22,7 @@ public class ServerManager {
     private IBubbleBungee bungee;
 
     private Set<BubbleServer> servers = new HashSet<>();
+    private Set<PacketInfo> unassigned = new HashSet<>();
 
     public ServerManager(IBubbleBungee bungee){
         this.bungee = bungee;
@@ -48,6 +51,10 @@ public class ServerManager {
     public BubbleServer getServer(String name){
         for(BubbleServer server:servers)if(server.getName().equalsIgnoreCase(name))return server;
         return null;
+    }
+
+    public Set<PacketInfo> getUnassigned() {
+        return unassigned;
     }
 
     public Set<BubbleServer> getServers(){

@@ -1,6 +1,7 @@
 package com.thebubblenetwork.bubblebungee;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.thebubblenetwork.api.global.bubblepackets.PacketInfo;
 import com.thebubblenetwork.api.global.bubblepackets.PacketListener;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.IPluginMessage;
@@ -13,7 +14,6 @@ import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.ServerListResponse;
 import com.thebubblenetwork.api.global.data.InvalidBaseException;
 import com.thebubblenetwork.api.global.data.PlayerData;
-import com.thebubblenetwork.api.global.player.BubblePlayer;
 import com.thebubblenetwork.api.global.plugin.BubbleHubObject;
 import com.thebubblenetwork.api.global.ranks.Rank;
 import com.thebubblenetwork.api.global.type.ServerType;
@@ -24,10 +24,7 @@ import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ServerPing;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.*;
 import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.*;
@@ -119,10 +116,15 @@ public class BubbleListener implements Listener,PacketListener{
             for(Rank r:proxiedBubblePlayer.getSubRanks())ranks += ", " + r.getName();
 
             HoverEvent clickhover = new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                    TextComponent.fromLegacyText("Name: " + ChatColor.GRAY + proxiedBubblePlayer.getName() + "\nSent at " + ChatColor.GRAY + format.format(new Date()) +"\nRank: " + ChatColor.GRAY + ranks));
+                    TextComponent.fromLegacyText(
+                                     "Name: " + ChatColor.GRAY + proxiedBubblePlayer.getName() +
+                                    "\nSent at " + ChatColor.GRAY + format.format(new Date()) +
+                                    "\nRank: " + ChatColor.GRAY + ranks
+                    ));
             withHover(message,clickhover);
 
             TextComponent name = new TextComponent(proxiedBubblePlayer.getNickName());
+            name.setColor(ChatColor.getByChar(getLastColor(TextComponent.toLegacyText(prefix))));
             name.setHoverEvent(clickhover);
             name.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND,"/msg " + proxiedBubblePlayer.getNickName() + " "));
 
@@ -164,6 +166,19 @@ public class BubbleListener implements Listener,PacketListener{
         ProxiedBubblePlayer player = (ProxiedBubblePlayer) ProxiedBubblePlayer.getPlayerObjectMap().remove(e.getPlayer().getUniqueId());
         player.setParty(null);
         player.save();
+    }
+
+    public static char getLastColor(String s) {
+        for (int i = s.length() - 2; i >= 0; i--) {
+            if (s.charAt(i) == ChatColor.COLOR_CHAR) {
+                char c = s.charAt(i + 1);
+                de.mickare.xserver.util.ChatColor color = de.mickare.xserver.util.ChatColor.getByChar(c);
+                if(color.isColor()){
+                    return c;
+                }
+            }
+        }
+        return de.mickare.xserver.util.ChatColor.RESET.getChar();
     }
 
     @EventHandler
@@ -294,7 +309,7 @@ public class BubbleListener implements Listener,PacketListener{
         }
         else if(message instanceof PlayerDataResponse){
             PlayerDataResponse response = (PlayerDataResponse)message;
-            BubblePlayer<ProxiedPlayer> player = ProxiedBubblePlayer.getObject(response.getName());
+            ProxiedBubblePlayer player = ProxiedBubblePlayer.getObject(response.getName());
             if(player != null) {
                 player.setData(response.getData());
             }
@@ -323,6 +338,14 @@ public class BubbleListener implements Listener,PacketListener{
                 BubbleServer server = getBungee().getManager().getServer(request.getTo());
                 if(server != null){
                     player.connect(server.getInfo());
+                    player.sendMessage(
+                            new ComponentBuilder("Sending you to ")
+                                    .color(ChatColor.RED)
+                                    .append(server.getType().getName() + "-" + server.getId())
+                                    .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,TextComponent.fromLegacyText(ChatColor.GRAY + server.getType().getName() + "\nOnline: " + server.getPlayercount())))
+                                    .color(ChatColor.GOLD)
+                                    .create()
+                    );
                 }
                 else getBungee().logSevere("Could not find bubbleserver " + request.getTo());
             }
@@ -337,7 +360,23 @@ public class BubbleListener implements Listener,PacketListener{
                     server = getBungee().getManager().getAvailble(request.getServerType(),true,false);
                 }
                 if(server == null){
-                    getBungee().logSevere("Couldn't find any server types for " + request.getServerType().getName());
+                    if(!getBungee().getManager().getUnassigned().isEmpty()){
+                        PacketInfo serverinfo = Iterables.get(getBungee().getManager().getUnassigned(),0);
+                        sendPacketSafe(serverinfo.getServer(),new AssignMessage(getBungee().getManager().getNewID(request.getServerType()),request.getServerType()));
+                        player.sendMessage(ChatMessageType.CHAT,
+                                new ComponentBuilder("Please wait a few seconds, a server is being created")
+                                        .color(ChatColor.RED)
+                                        .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,TextComponent.fromLegacyText(ChatColor.GOLD + "This will take about 5 seconds")))
+                                        .create());
+                    }
+                    else{
+                        player.sendMessage(
+                                new ComponentBuilder("No servers open at the moment")
+                                        .color(ChatColor.RED)
+                                        .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,TextComponent.fromLegacyText(ChatColor.GOLD + "A server will be open soon")))
+                                        .create());
+                        getBungee().logSevere("Couldn't find any server types for " + request.getServerType().getName());
+                    }
                     return;
                 }
                 player.connect(server.getInfo());
@@ -365,7 +404,8 @@ public class BubbleListener implements Listener,PacketListener{
         try {
             type = getBungee().getManager().getNeeded();
         } catch (Throwable e) {
-            getBungee().getPlugin().getLogger().log(Level.WARNING,"No servers needed",e);
+            getBungee().getManager().getUnassigned().add(info);
+            getBungee().getPlugin().getLogger().log(Level.WARNING,"Could not find server, adding to unassigned",e);
         }
         int id = getBungee().getManager().getNewID(type);
         AssignMessage message = new AssignMessage(id,type);
