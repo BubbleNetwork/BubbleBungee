@@ -54,6 +54,7 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
     private BubbleListener listener;
     private P plugin;
     private BungeePlugman pluginManager;
+    private File file;
 
     public BubbleBungee(P plugin){
         super();
@@ -62,6 +63,8 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
 
     public void onBubbleEnable(){
         setInstance(this);
+
+        file = getPlugin().getFile();
 
         logInfo("Loading ranks...");
 
@@ -283,7 +286,7 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
     }
 
     public File getReplace() {
-        return getPlugin().getFile();
+        return file;
     }
 
     public String getArtifact() {
@@ -304,5 +307,13 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
 
     public void update(Runnable r) {
         runTaskLater(r,1L,TimeUnit.SECONDS);
+    }
+
+    public void updateTaskBefore() {
+        getPlugman().unload(getPlugin());
+    }
+
+    public void updateTaskAfter() {
+        getPlugman().load(file);
     }
 }
