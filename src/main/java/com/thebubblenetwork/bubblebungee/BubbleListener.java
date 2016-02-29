@@ -414,6 +414,7 @@ public class BubbleListener implements Listener,PacketListener{
     }
 
     public void onDisconnect(PacketInfo info){
+        getBungee().getManager().removeUnassigned(info.getServer());
         BubbleServer server = getBungee().getManager().getServer(info.getServer());
         if(server != null){
             server.remove();

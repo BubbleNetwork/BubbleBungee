@@ -62,12 +62,22 @@ public class ServerManager {
     }
 
     public BubbleServer load(XServer xserver,ServerInfo info){
+        removeUnassigned(xserver);
         BubbleServer server = new BubbleServer(info,xserver);
         servers.add(server);
         return server;
     }
 
+    public void removeUnassigned(XServer server){
+        Iterator<PacketInfo> infoIterator = getUnassigned().iterator();
+        while(infoIterator.hasNext()){
+            PacketInfo packetInfo = infoIterator.next();
+            if(packetInfo.getServer().getName().equals(server.getName()))infoIterator.remove();
+        }
+    }
+
     public BubbleServer create(XServer server,ServerType wrapper,int id){
+        removeUnassigned(server);
         InetSocketAddress address = new InetSocketAddress(server.getHost(),Integer.parseInt(server.getName())+10000);
         return BubbleServer.create(server,address,wrapper,id);
     }
@@ -135,7 +145,7 @@ public class ServerManager {
 
     public BubbleServer getServer(XServer xserver){
         for(BubbleServer server:servers)
-            if(server.getServer().getHost().equals(xserver.getHost()) && server.getServer().getPort() == xserver.getPort())return server;
+            if(server.getServer().getName().equals(xserver.getName()))return server;
         return null;
     }
 
