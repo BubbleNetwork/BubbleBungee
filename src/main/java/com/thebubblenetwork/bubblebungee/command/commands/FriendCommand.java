@@ -28,39 +28,47 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-public class FriendCommand extends BaseCommand{
-    private static void notSelf(ProxiedPlayer player1,ProxiedPlayer player2){
-        if(player1.getUniqueId() == player2.getUniqueId())throw new IllegalArgumentException("You may not befriend yourself");
+public class FriendCommand extends BaseCommand {
+    private static final String nowfriends = ChatColor.GOLD + "You are now friends with {0}", invitefriends = ChatColor.GOLD + "You sent a request to {0}", invitedfriends = "[Friend request from {0}]";
+
+    private static void notSelf(ProxiedPlayer player1, ProxiedPlayer player2) {
+        if (player1.getUniqueId() == player2.getUniqueId()) {
+            throw new IllegalArgumentException("You may not befriend yourself");
+        }
     }
 
-    private static ProxiedPlayer notConsole(CommandSender sender) throws CommandException{
-        if(!(sender instanceof ProxiedPlayer))throw new IllegalArgumentException("You must be a player to do this command");
-        return (ProxiedPlayer)sender;
+    private static ProxiedPlayer notConsole(CommandSender sender) throws CommandException {
+        if (!(sender instanceof ProxiedPlayer)) {
+            throw new IllegalArgumentException("You must be a player to do this command");
+        }
+        return (ProxiedPlayer) sender;
     }
 
-    private static ProxiedBubblePlayer isPlayer(ProxiedPlayer player) throws CommandException{
+    private static ProxiedBubblePlayer isPlayer(ProxiedPlayer player) throws CommandException {
         ProxiedBubblePlayer bubblePlayer = ProxiedBubblePlayer.getObject(player.getUniqueId());
-        if(bubblePlayer == null)throw new IllegalArgumentException("Please wait a second");
+        if (bubblePlayer == null) {
+            throw new IllegalArgumentException("Please wait a second");
+        }
         return bubblePlayer;
     }
 
-    private static List<UUID> newList(UUID[] uuids){
+    private static List<UUID> newList(UUID[] uuids) {
         List<UUID> uuidList = new ArrayList<>();
         uuidList.addAll(Arrays.asList(uuids));
         return uuidList;
     }
 
-    private static BaseComponent[] getPlayingInformation(UUID u){
+    private static BaseComponent[] getPlayingInformation(UUID u) {
         ProxiedBubblePlayer player;
-        if((player = ProxiedBubblePlayer.getObject(u)) != null){
-            BaseComponent[] info  = TextComponent.fromLegacyText(ChatColor.GOLD + player.getNickName() + ChatColor.GREEN + " (Online) ");
+        if ((player = ProxiedBubblePlayer.getObject(u)) != null) {
+            BaseComponent[] info = TextComponent.fromLegacyText(ChatColor.GOLD + player.getNickName() + ChatColor.GREEN + " (Online) ");
             ProxiedPlayer proxiedPlayer = player.getPlayer();
-            if(proxiedPlayer != null) {
+            if (proxiedPlayer != null) {
                 BubbleServer using = BubbleBungee.getInstance().getManager().getServer(proxiedPlayer.getServer().getInfo());
-                if (using != null){
+                if (using != null) {
                     TextComponent playing = new TextComponent("In " + using.getType().getName());
                     playing.setUnderlined(true);
-                    playing.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/server " + using.getName()));
+                    playing.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/server " + using.getName()));
                     playing.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.GOLD + "Click to join them!")));
                     playing.setColor(ChatColor.YELLOW);
                     info = new ImmutableSet.Builder<BaseComponent>().add(info).add(playing).build().toArray(new BaseComponent[0]);
@@ -69,23 +77,21 @@ public class FriendCommand extends BaseCommand{
             return info;
         }
         SQLConnection connection = BubbleBungee.getInstance().getConnection();
-        final String s = "`uuid`=\"" + u +"\" AND `key`=\"" + PlayerData.NAME + "\"";
+        final String s = "`uuid`=\"" + u + "\" AND `key`=\"" + PlayerData.NAME + "\"";
         ResultSet set = null;
-        try{
-            set = SQLUtil.query(connection, PlayerData.table,"value",new SQLUtil.Where(null){
+        try {
+            set = SQLUtil.query(connection, PlayerData.table, "value", new SQLUtil.Where(null) {
                 @Override
                 public String getWhere() {
                     return s;
                 }
             });
-            if(set.next()){
+            if (set.next()) {
                 return TextComponent.fromLegacyText(ChatColor.GOLD + set.getString("value") + ChatColor.RED + " (Offline) ");
             }
-        }
-        catch (SQLException|ClassNotFoundException ex){
-        }
-        finally {
-            if(set != null) {
+        } catch (SQLException | ClassNotFoundException ex) {
+        } finally {
+            if (set != null) {
                 try {
                     set.close();
                 } catch (Exception ex) {
@@ -96,43 +102,42 @@ public class FriendCommand extends BaseCommand{
         return null;
     }
 
-    private static UUID getUUID(String name){
+    private static UUID getUUID(String name) {
         ProxiedPlayer player;
-        if((player = ProxyServer.getInstance().getPlayer(name)) != null)return player.getUniqueId();
+        if ((player = ProxyServer.getInstance().getPlayer(name)) != null) {
+            return player.getUniqueId();
+        }
         SQLConnection connection = BubbleBungee.getInstance().getConnection();
-        final String s = "`key`=\"" + PlayerData.NAME +"\" AND `value`=\"" + name + "\"";
-        final String s2 = "`key`=\"" + PlayerData.NICKNAME +"\" AND `value`=\"" + name + "\"";
+        final String s = "`key`=\"" + PlayerData.NAME + "\" AND `value`=\"" + name + "\"";
+        final String s2 = "`key`=\"" + PlayerData.NICKNAME + "\" AND `value`=\"" + name + "\"";
         ResultSet set = null;
-        try{
-            set = SQLUtil.query(connection, PlayerData.table,"uuid",new SQLUtil.Where(null){
+        try {
+            set = SQLUtil.query(connection, PlayerData.table, "uuid", new SQLUtil.Where(null) {
                 @Override
                 public String getWhere() {
                     return s;
                 }
             });
-            if(set.next()){
+            if (set.next()) {
                 return UUID.fromString(set.getString("uuid"));
             }
             set.close();
-            set = SQLUtil.query(connection, PlayerData.table,"uuid", new SQLUtil.Where(null){
+            set = SQLUtil.query(connection, PlayerData.table, "uuid", new SQLUtil.Where(null) {
                 @Override
-                public String getWhere(){
+                public String getWhere() {
                     return s2;
                 }
             });
-            if(set.next()){
+            if (set.next()) {
                 return UUID.fromString(set.getString("uuid"));
             }
-        }
-        catch (SQLException|ClassNotFoundException ex){
+        } catch (SQLException | ClassNotFoundException ex) {
             return null;
-        }
-        finally {
-            if(set != null){
-                try{
+        } finally {
+            if (set != null) {
+                try {
                     set.close();
-                }
-                catch (Exception ex){
+                } catch (Exception ex) {
 
                 }
             }
@@ -140,122 +145,131 @@ public class FriendCommand extends BaseCommand{
         return null;
     }
 
-    private static final String
-            nowfriends = ChatColor.GOLD + "You are now friends with {0}",
-            invitefriends = ChatColor.GOLD + "You sent a request to {0}",
-            invitedfriends = "[Friend request from {0}]";
-
     public FriendCommand() {
-        super("friend", null,
-                new ImmutableSet.Builder<ICommand>()
-                        .add(new SubCommand("add",null,"add <player>","rq") {
-                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
-                                ProxiedPlayer playerPlayer = notConsole(sender);
-                                if(args.length == 0)throw invalidUsage();
-                                //Player requesting
-                                ProxiedBubblePlayer player = isPlayer(playerPlayer);
-                                ProxiedPlayer targetPlayer = ProxyServer.getInstance().getPlayer(args[0]);
-                                if(targetPlayer == null)throw new CommandException("Player is not online",this);
-                                notSelf(playerPlayer,targetPlayer);
-                                UUID playeruuid = playerPlayer.getUniqueId();
-                                UUID targetuuid = targetPlayer.getUniqueId();
-                                //Player being requested
-                                ProxiedBubblePlayer target = isPlayer(targetPlayer);
-                                List<UUID> playerFriends = newList(player.getFriends());
-                                if(playerFriends.contains(targetuuid))throw new CommandException("You are already friends with this player",this);
-                                List<UUID> targetIncoming = newList(target.getFriendIncomingRequests());
-                                if(targetIncoming.contains(playeruuid))throw new CommandException("You have already sent a friend request to this player",this);
-                                List<UUID> playerIncoming = newList(player.getFriendIncomingRequests());
-                                List<UUID> targetFriends = newList(target.getFriends());
-                                String returnstring;
-                                if(playerIncoming.contains(targetuuid)){
-                                    targetIncoming.remove(playeruuid);
-                                    target.setFriendsIncomingRequests(targetIncoming);
-                                    playerIncoming.remove(targetuuid);
-                                    player.setFriendsIncomingRequests(playerIncoming);
-                                    targetFriends.add(playeruuid);
-                                    target.setFriends(targetFriends);
-                                    playerFriends.add(targetuuid);
-                                    player.setFriends(playerFriends);
-                                    TextComponent component = new TextComponent(nowfriends.replace("{0}",player.getNickName()));
-                                    component.setColor(ChatColor.GOLD);
-                                    component.setBold(true);
-                                    targetPlayer.sendMessage(component);
-                                    returnstring = nowfriends;
-                                }
-                                else{
-                                    TextComponent component = new TextComponent(invitedfriends.replace("{0}",player.getNickName()));
-                                    component.setColor(ChatColor.GOLD);
-                                    component.setUnderlined(true);
-                                    component.setBold(true);
-                                    component.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,TextComponent.fromLegacyText(ChatColor.YELLOW + "Click to accept the friend request")));
-                                    component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/friend add " + playerPlayer.getName()));
-                                    targetPlayer.sendMessage(component);
-                                    targetIncoming.add(playeruuid);
-                                    target.setFriendsIncomingRequests(targetIncoming);
-                                    returnstring = invitefriends;
-                                }
-                                return TextComponent.fromLegacyText(returnstring.replace("{0}",target.getNickName()));
-                            }
-                        })
-                        .add(new SubCommand("list",null,"list","listfriends") {
-                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
-                                ProxiedPlayer playerPlayer = notConsole(sender);
-                                ProxiedBubblePlayer bubblePlayer = isPlayer(playerPlayer);
-                                ImmutableList.Builder<BaseComponent> components = new ImmutableList.Builder<>();
-                                TextComponent friends = new TextComponent("Your friends:");
-                                friends.setColor(ChatColor.GOLD);
-                                friends.setBold(true);
-                                friends.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,TextComponent.fromLegacyText(ChatColor.GOLD + "A list of all your friends!")));
-                                components.add(friends);
-                                for(UUID u:bubblePlayer.getFriends()){
-                                    BaseComponent[] name = FriendCommand.getPlayingInformation(u);
-                                    if(name != null){
-                                        TextComponent newline = new TextComponent("\n - ");
-                                        newline.setColor(ChatColor.GOLD);
-                                        components.add(newline);
-                                        components.add(name);
-                                    }
-                                }
-                                return components.build().toArray(new BaseComponent[0]);
-                            }
-                        })
-                        .add(new SubCommand("remove",null,"remove <friend>","removefriend") {
-                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
-                                ProxiedPlayer proxiedPlayer = notConsole(sender);
-                                ProxiedBubblePlayer bubblePlayer = isPlayer(proxiedPlayer);
-                                if(args.length == 0)throw invalidUsage();
-                                List<UUID> playerFriends = newList(bubblePlayer.getFriends());
-                                ProxiedBubblePlayer online = ProxiedBubblePlayer.getObject(args[0]);
-                                boolean forcesave = false;
-                                if(online == null){
-                                    forcesave = true;
-                                    UUID u = getUUID(args[0]);
-                                    if(u == null)throw new CommandException("Player not found",this);
-                                    if(u == proxiedPlayer.getUniqueId())throw new CommandException("You are not friends with yourself",this);
-                                    if(!playerFriends.contains(u))throw new CommandException("You are not friends with this player",this);
-                                    try {
-                                        PlayerData manualget = BubbleBungee.getInstance().loadData(u);
-                                        online = new ProxiedBubblePlayer(u,manualget);
-                                    } catch (Exception e) {
-                                        throw new CommandException("Player not found",this);
-                                    }
-                                }
-                                else {
-                                    if(online.getUUID() == proxiedPlayer.getUniqueId())throw new CommandException("You are not friends with yourself",this);
-                                    if(!playerFriends.contains(online.getUUID()))throw new CommandException("You are not friends with this player",this);
-                                    online.getPlayer().sendMessage(TextComponent.fromLegacyText(ChatColor.GOLD + "You are no longer friends with " + bubblePlayer.getNickName()));
-                                }
-                                playerFriends.remove(online.getUUID());
-                                bubblePlayer.setFriends(playerFriends);
-                                List<UUID> targetfriends = newList(online.getFriends());
-                                targetfriends.remove(proxiedPlayer.getUniqueId());
-                                online.setFriends(targetfriends);
-                                if(forcesave)online.save();
-                                return TextComponent.fromLegacyText(ChatColor.GOLD + "You are no longer friends with " + online.getNickName());
-                            }
-                        })
-                        .build()
-                , "friends");
+        super("friend", null, new ImmutableSet.Builder<ICommand>().add(new SubCommand("add", null, "add <player>", "rq") {
+            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                ProxiedPlayer playerPlayer = notConsole(sender);
+                if (args.length == 0) {
+                    throw invalidUsage();
+                }
+                //Player requesting
+                ProxiedBubblePlayer player = isPlayer(playerPlayer);
+                ProxiedPlayer targetPlayer = ProxyServer.getInstance().getPlayer(args[0]);
+                if (targetPlayer == null) {
+                    throw new CommandException("Player is not online", this);
+                }
+                notSelf(playerPlayer, targetPlayer);
+                UUID playeruuid = playerPlayer.getUniqueId();
+                UUID targetuuid = targetPlayer.getUniqueId();
+                //Player being requested
+                ProxiedBubblePlayer target = isPlayer(targetPlayer);
+                List<UUID> playerFriends = newList(player.getFriends());
+                if (playerFriends.contains(targetuuid)) {
+                    throw new CommandException("You are already friends with this player", this);
+                }
+                List<UUID> targetIncoming = newList(target.getFriendIncomingRequests());
+                if (targetIncoming.contains(playeruuid)) {
+                    throw new CommandException("You have already sent a friend request to this player", this);
+                }
+                List<UUID> playerIncoming = newList(player.getFriendIncomingRequests());
+                List<UUID> targetFriends = newList(target.getFriends());
+                String returnstring;
+                if (playerIncoming.contains(targetuuid)) {
+                    targetIncoming.remove(playeruuid);
+                    target.setFriendsIncomingRequests(targetIncoming);
+                    playerIncoming.remove(targetuuid);
+                    player.setFriendsIncomingRequests(playerIncoming);
+                    targetFriends.add(playeruuid);
+                    target.setFriends(targetFriends);
+                    playerFriends.add(targetuuid);
+                    player.setFriends(playerFriends);
+                    TextComponent component = new TextComponent(nowfriends.replace("{0}", player.getNickName()));
+                    component.setColor(ChatColor.GOLD);
+                    component.setBold(true);
+                    targetPlayer.sendMessage(component);
+                    returnstring = nowfriends;
+                } else {
+                    TextComponent component = new TextComponent(invitedfriends.replace("{0}", player.getNickName()));
+                    component.setColor(ChatColor.GOLD);
+                    component.setUnderlined(true);
+                    component.setBold(true);
+                    component.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.YELLOW + "Click to accept the friend request")));
+                    component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/friend add " + playerPlayer.getName()));
+                    targetPlayer.sendMessage(component);
+                    targetIncoming.add(playeruuid);
+                    target.setFriendsIncomingRequests(targetIncoming);
+                    returnstring = invitefriends;
+                }
+                return TextComponent.fromLegacyText(returnstring.replace("{0}", target.getNickName()));
+            }
+        }).add(new SubCommand("list", null, "list", "listfriends") {
+            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                ProxiedPlayer playerPlayer = notConsole(sender);
+                ProxiedBubblePlayer bubblePlayer = isPlayer(playerPlayer);
+                ImmutableList.Builder<BaseComponent> components = new ImmutableList.Builder<>();
+                TextComponent friends = new TextComponent("Your friends:");
+                friends.setColor(ChatColor.GOLD);
+                friends.setBold(true);
+                friends.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.GOLD + "A list of all your friends!")));
+                components.add(friends);
+                for (UUID u : bubblePlayer.getFriends()) {
+                    BaseComponent[] name = FriendCommand.getPlayingInformation(u);
+                    if (name != null) {
+                        TextComponent newline = new TextComponent("\n - ");
+                        newline.setColor(ChatColor.GOLD);
+                        components.add(newline);
+                        components.add(name);
+                    }
+                }
+                return components.build().toArray(new BaseComponent[0]);
+            }
+        }).add(new SubCommand("remove", null, "remove <friend>", "removefriend") {
+            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                ProxiedPlayer proxiedPlayer = notConsole(sender);
+                ProxiedBubblePlayer bubblePlayer = isPlayer(proxiedPlayer);
+                if (args.length == 0) {
+                    throw invalidUsage();
+                }
+                List<UUID> playerFriends = newList(bubblePlayer.getFriends());
+                ProxiedBubblePlayer online = ProxiedBubblePlayer.getObject(args[0]);
+                boolean forcesave = false;
+                if (online == null) {
+                    forcesave = true;
+                    UUID u = getUUID(args[0]);
+                    if (u == null) {
+                        throw new CommandException("Player not found", this);
+                    }
+                    if (u == proxiedPlayer.getUniqueId()) {
+                        throw new CommandException("You are not friends with yourself", this);
+                    }
+                    if (!playerFriends.contains(u)) {
+                        throw new CommandException("You are not friends with this player", this);
+                    }
+                    try {
+                        PlayerData manualget = BubbleBungee.getInstance().loadData(u);
+                        online = new ProxiedBubblePlayer(u, manualget);
+                    } catch (Exception e) {
+                        throw new CommandException("Player not found", this);
+                    }
+                } else {
+                    if (online.getUUID() == proxiedPlayer.getUniqueId()) {
+                        throw new CommandException("You are not friends with yourself", this);
+                    }
+                    if (!playerFriends.contains(online.getUUID())) {
+                        throw new CommandException("You are not friends with this player", this);
+                    }
+                    online.getPlayer().sendMessage(TextComponent.fromLegacyText(ChatColor.GOLD + "You are no longer friends with " + bubblePlayer.getNickName()));
+                }
+                playerFriends.remove(online.getUUID());
+                bubblePlayer.setFriends(playerFriends);
+                List<UUID> targetfriends = newList(online.getFriends());
+                targetfriends.remove(proxiedPlayer.getUniqueId());
+                online.setFriends(targetfriends);
+                if (forcesave) {
+                    online.save();
+                }
+                return TextComponent.fromLegacyText(ChatColor.GOLD + "You are no longer friends with " + online.getNickName());
+            }
+        }).build(), "friends");
     }
 }

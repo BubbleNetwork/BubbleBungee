@@ -27,69 +27,74 @@ import java.util.UUID;
  * Project: BubbleBungee
  */
 
-public class ProxiedBubblePlayer extends BubblePlayerObject<ProxiedPlayer> implements BubblePlayer<ProxiedPlayer>{
+public class ProxiedBubblePlayer extends BubblePlayerObject<ProxiedPlayer> implements BubblePlayer<ProxiedPlayer> {
 
-    public static ProxiedBubblePlayer getObject(UUID u){
+    public static ProxiedBubblePlayer getObject(UUID u) {
         return (ProxiedBubblePlayer) getPlayerObjectMap().get(u);
     }
 
-    public static ProxiedBubblePlayer getObject(String name){
-        for(BubblePlayer player:getPlayerObjectMap().values()){
-            if(player instanceof ProxiedBubblePlayer){
-                ProxiedBubblePlayer proxiedBubblePlayer = (ProxiedBubblePlayer)player;
-                try{
-                    if(proxiedBubblePlayer.getName().equalsIgnoreCase(name))return proxiedBubblePlayer;
-                }
-                catch (UnsupportedOperationException ex){
+    public static ProxiedBubblePlayer getObject(String name) {
+        for (BubblePlayer player : getPlayerObjectMap().values()) {
+            if (player instanceof ProxiedBubblePlayer) {
+                ProxiedBubblePlayer proxiedBubblePlayer = (ProxiedBubblePlayer) player;
+                try {
+                    if (proxiedBubblePlayer.getName().equalsIgnoreCase(name)) {
+                        return proxiedBubblePlayer;
+                    }
+                } catch (UnsupportedOperationException ex) {
                 }
             }
         }
-        for(BubblePlayer player:getPlayerObjectMap().values()){
-            if(player instanceof ProxiedBubblePlayer){
-                ProxiedBubblePlayer proxiedBubblePlayer = (ProxiedBubblePlayer)player;
-                try{
-                    if(proxiedBubblePlayer.getNickName() != null && proxiedBubblePlayer.getNickName().equalsIgnoreCase(name))return proxiedBubblePlayer;
-                }
-                catch (UnsupportedOperationException ex){
+        for (BubblePlayer player : getPlayerObjectMap().values()) {
+            if (player instanceof ProxiedBubblePlayer) {
+                ProxiedBubblePlayer proxiedBubblePlayer = (ProxiedBubblePlayer) player;
+                try {
+                    if (proxiedBubblePlayer.getNickName() != null && proxiedBubblePlayer.getNickName().equalsIgnoreCase(name)) {
+                        return proxiedBubblePlayer;
+                    }
+                } catch (UnsupportedOperationException ex) {
                 }
             }
         }
         return null;
     }
 
+    private String name;
+    private Party party = null;
+
     public ProxiedBubblePlayer(UUID u, PlayerData data) {
         super(u, data);
     }
 
-    private String name;
-    private Party party = null;
-
-    public void setName(String name){
-        this.name = name;
-        getData().set(PlayerData.NAME,name);
-    }
-
-    public String getName(){
-        if(name == null){
-            if(getPlayer() != null)setName(getPlayer().getName());
-            else try {
-                setName(getData().getString(PlayerData.NAME));
-            } catch (InvalidBaseException e) {
-                throw new UnsupportedOperationException(e);
+    public String getName() {
+        if (name == null) {
+            if (getPlayer() != null) {
+                setName(getPlayer().getName());
+            } else {
+                try {
+                    setName(getData().getString(PlayerData.NAME));
+                } catch (InvalidBaseException e) {
+                    throw new UnsupportedOperationException(e);
+                }
             }
         }
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+        getData().set(PlayerData.NAME, name);
+    }
+
     @Override
-    public void update(){
+    public void update() {
         BubbleBungee.getInstance().updatePlayer(this);
     }
 
-    public void save(){
+    public void save() {
         try {
-            getData().save(PlayerData.table,"uuid",getUUID());
-        } catch (SQLException|ClassNotFoundException e) {
+            getData().save(PlayerData.table, "uuid", getUUID());
+        } catch (SQLException | ClassNotFoundException e) {
             BubbleBungee.getInstance().logSevere(e.getMessage());
             BubbleBungee.getInstance().logSevere("Could not save data of " + getName());
         }
@@ -100,15 +105,13 @@ public class ProxiedBubblePlayer extends BubblePlayerObject<ProxiedPlayer> imple
     }
 
     public void setParty(Party party) {
-        if(this.party != null){
-            if(this.party.isLeader(getPlayer())){
+        if (this.party != null) {
+            if (this.party.isLeader(getPlayer())) {
                 this.party.disband(getNickName() + " disbanded the party");
-            }
-            else if(this.party.isMember(getPlayer())){
-                this.party.removeMember(getPlayer(),getNickName() + " left the party");
-            }
-            else if(this.party.isInvited(getPlayer())){
-                this.party.cancelInvite(getPlayer(),getNickName() + " denied the invite");
+            } else if (this.party.isMember(getPlayer())) {
+                this.party.removeMember(getPlayer(), getNickName() + " left the party");
+            } else if (this.party.isInvited(getPlayer())) {
+                this.party.cancelInvite(getPlayer(), getNickName() + " denied the invite");
             }
         }
         this.party = party;

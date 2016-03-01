@@ -14,20 +14,20 @@ import java.net.InetSocketAddress;
  * 23/01/2016 {14:58}
  * Created January 2016
  */
-public class BubbleServer{
-    protected static BubbleServer create(XServer xserver,String name, InetSocketAddress address,String motd){
-        ServerInfo info = ProxyServer.getInstance().constructServerInfo(name,address,motd,false);
-        BubbleServer server =  new BubbleServer(info,xserver);
-        ProxyServer.getInstance().getServers().put(name,info);
+public class BubbleServer {
+    protected static BubbleServer create(XServer xserver, String name, InetSocketAddress address, String motd) {
+        ServerInfo info = ProxyServer.getInstance().constructServerInfo(name, address, motd, false);
+        BubbleServer server = new BubbleServer(info, xserver);
+        ProxyServer.getInstance().getServers().put(name, info);
         BubbleBungee.getInstance().getManager().register(server);
         return server;
     }
 
-    protected static BubbleServer create(XServer xserver, InetSocketAddress address, ServerType wrapper, int id){
+    protected static BubbleServer create(XServer xserver, InetSocketAddress address, ServerType wrapper, int id) {
         String name = wrapper.getPrefix() + String.valueOf(id);
-        ServerInfo info = ProxyServer.getInstance().constructServerInfo(name,address,"",false);
-        BubbleServer server =  new BubbleServer(info,xserver,wrapper,id);
-        ProxyServer.getInstance().getServers().put(name,info);
+        ServerInfo info = ProxyServer.getInstance().constructServerInfo(name, address, "", false);
+        BubbleServer server = new BubbleServer(info, xserver, wrapper, id);
+        ProxyServer.getInstance().getServers().put(name, info);
         BubbleBungee.getInstance().getManager().register(server);
         return server;
     }
@@ -39,21 +39,20 @@ public class BubbleServer{
     private ServerType type;
     private boolean joinable = false;
 
-    private BubbleServer(ServerInfo info,XServer server,ServerType wrapper,int id){
+    private BubbleServer(ServerInfo info, XServer server, ServerType wrapper, int id) {
         this.id = id;
         this.info = info;
         type = wrapper;
         this.server = server;
     }
 
-    protected BubbleServer(ServerInfo info,XServer server){
+    protected BubbleServer(ServerInfo info, XServer server) {
         this.info = info;
         this.server = server;
-        try{
+        try {
             type = BubbleBungee.getInstance().getManager().getType(getInfo());
-            id = BubbleBungee.getInstance().getManager().getID(getInfo(),type);
-        }
-        catch (Exception ex){
+            id = BubbleBungee.getInstance().getManager().getID(getInfo(), type);
+        } catch (Exception ex) {
             ex.printStackTrace();
             remove();
         }
@@ -63,12 +62,22 @@ public class BubbleServer{
         return info.getName();
     }
 
-    public ServerInfo getInfo(){
+    public ServerInfo getInfo() {
         return info;
     }
 
-    public void remove(){
-        if(getInfo() != null) {
+    protected void setInfo(ServerInfo info) {
+        if (info.getAddress() != getInfo().getAddress()) {
+            throw new IllegalArgumentException("Address may not change");
+        }
+        if (info.getName().equalsIgnoreCase(getName())) {
+            this.info = info;
+            ProxyServer.getInstance().getServers().put(getName(), getInfo());
+        }
+    }
+
+    public void remove() {
+        if (getInfo() != null) {
             ProxyServer.getInstance().getServers().remove(getName());
             BubbleBungee.getInstance().getManager().remove(this);
         }
@@ -86,47 +95,39 @@ public class BubbleServer{
         this.playercount = playercount;
     }
 
-    public boolean isJoinable(){
+    public boolean isJoinable() {
         return joinable;
     }
 
-    public void setJoinable(boolean joinable){
+    public void setJoinable(boolean joinable) {
         this.joinable = joinable;
-    }
-
-    protected void setInfo(ServerInfo info){
-        if(info.getAddress() != getInfo().getAddress())throw new IllegalArgumentException("Address may not change");
-        if(info.getName().equalsIgnoreCase(getName())){
-            this.info = info;
-            ProxyServer.getInstance().getServers().put(getName(),getInfo());
-        }
     }
 
     public int getId() {
         return id;
     }
 
-    public void setId(int id) throws Exception{
+    public void setId(int id) throws Exception {
         this.id = id;
-        setInfo(ProxyServer.getInstance().constructServerInfo(getType().getPrefix() + String.valueOf(id),getInfo().getAddress(),getInfo().getMotd(),false));
+        setInfo(ProxyServer.getInstance().constructServerInfo(getType().getPrefix() + String.valueOf(id), getInfo().getAddress(), getInfo().getMotd(), false));
     }
 
-    public ServerType getType(){
+    public ServerType getType() {
         return type;
     }
 
-    public void setType(ServerType type) throws Exception{
+    public void setType(ServerType type) throws Exception {
         this.type = type;
-        setInfo(ProxyServer.getInstance().constructServerInfo(type.getPrefix() + String.valueOf(getId()),getInfo().getAddress(),getInfo().getMotd(),false));
+        setInfo(ProxyServer.getInstance().constructServerInfo(type.getPrefix() + String.valueOf(getId()), getInfo().getAddress(), getInfo().getMotd(), false));
     }
 
-    public XServer getServer(){
+    public XServer getServer() {
         return server;
     }
 
     @Override
-    public boolean equals(Object o){
-        if(getName() != null) {
+    public boolean equals(Object o) {
+        if (getName() != null) {
             if (o instanceof BubbleServer) {
                 BubbleServer server = (BubbleServer) o;
                 return getName().equalsIgnoreCase(server.getName());

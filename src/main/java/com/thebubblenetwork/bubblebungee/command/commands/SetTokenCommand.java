@@ -15,39 +15,44 @@ import java.util.UUID;
 /**
  * Created by User on 18/02/2016.
  */
-public class SetTokenCommand extends SimpleCommand{
+public class SetTokenCommand extends SimpleCommand {
     public SetTokenCommand() {
         super("settokens", "token.settokens", "/settokens <player> <tokens>", "settoken");
     }
 
     public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
-        if(args.length < 2)throw invalidUsage();
+        if (args.length < 2) {
+            throw invalidUsage();
+        }
         String name = args[0];
         ProxiedBubblePlayer online = ProxiedBubblePlayer.getObject(name);
         boolean forcesave = false;
-        if(online == null){
+        if (online == null) {
             forcesave = true;
             UUID u = TokenCommand.getUUID(name);
-            if(u == null)throw new CommandException("Player not found",this);
+            if (u == null) {
+                throw new CommandException("Player not found", this);
+            }
             try {
                 online = new ProxiedBubblePlayer(u, BubbleBungee.getInstance().loadData(u));
             } catch (Exception e) {
-                throw new CommandException("Player not found",this);
+                throw new CommandException("Player not found", this);
             }
         }
         String number = args[1];
         int i;
-        try{
+        try {
             i = Integer.parseInt(number);
-        }
-        catch (Exception ex){
-            throw new CommandException("Invalid number",this);
+        } catch (Exception ex) {
+            throw new CommandException("Invalid number", this);
         }
         online.setTokens(i);
-        if(forcesave)online.save();
+        if (forcesave) {
+            online.save();
+        }
         BaseComponent[] components = TextComponent.fromLegacyText(ChatColor.GOLD + "Successfully set the tokens of \'" + online.getNickName() + "\' to \'" + String.valueOf(i) + "\'");
-        HoverEvent event = new HoverEvent(HoverEvent.Action.SHOW_TEXT,TextComponent.fromLegacyText(ChatColor.RED + "This was " + (!forcesave ? "not" : "") + " force saved"));
-        for(BaseComponent c:components){
+        HoverEvent event = new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.RED + "This was " + (!forcesave ? "not" : "") + " force saved"));
+        for (BaseComponent c : components) {
             c.setHoverEvent(event);
         }
         return components;

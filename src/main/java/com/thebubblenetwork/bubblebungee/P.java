@@ -20,20 +20,20 @@ import net.md_5.bungee.api.plugin.Plugin;
 public class P extends Plugin {
     private IBubbleBungee bubbleBungee;
 
-    public P(){
+    public P() {
         super();
         bubbleBungee = new BubbleBungee(this);
     }
 
-    public void onLoad(){
+    public void onLoad() {
         bubbleBungee.onLoad();
     }
 
-    public void onEnable(){
+    public void onEnable() {
         bubbleBungee.onEnable();
     }
 
-    public void onDisable(){
+    public void onDisable() {
         bubbleBungee.onDisable();
     }
 }

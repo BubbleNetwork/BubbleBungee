@@ -19,33 +19,41 @@ import java.util.UUID;
  * 16/02/2016 {17:17}
  * Created February 2016
  */
-public class WhoisCommand extends SimpleCommand{
-    public WhoisCommand(){
-        super("whois","rankmanager.whois","/whois <player>","show","who");
+public class WhoisCommand extends SimpleCommand {
+    public WhoisCommand() {
+        super("whois", "rankmanager.whois", "/whois <player>", "show", "who");
     }
 
     public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
-        if(args.length == 0)throw invalidUsage();
+        if (args.length == 0) {
+            throw invalidUsage();
+        }
         String playername = args[0];
         ProxiedBubblePlayer online = ProxiedBubblePlayer.getObject(playername);
-        if(online == null){
+        if (online == null) {
             UUID u = RankCommand.getUUID(playername);
-            if(u == null)throw new CommandException("Player not found",this);
+            if (u == null) {
+                throw new CommandException("Player not found", this);
+            }
             try {
                 online = new ProxiedBubblePlayer(u, BubbleBungee.getInstance().loadData(u));
             } catch (Exception e) {
-                throw new CommandException("Player not found",this);
+                throw new CommandException("Player not found", this);
             }
         }
-        HoverEvent hoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT,TextComponent.fromLegacyText(ChatColor.RED + "All player information about " + online.getName()));
+        HoverEvent hoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.RED + "All player information about " + online.getName()));
         String info = ChatColor.GOLD + "Whois: " + ChatColor.RED + online.getName();
         info += "\n" + ChatColor.GOLD + "Nickname: " + online.getNickName();
         info += "\n" + ChatColor.GOLD + "Tokens: " + String.valueOf(online.getTokens());
         info += "\n" + ChatColor.GOLD + "Rank: " + online.getRank().getName();
         info += "\n" + ChatColor.GOLD + "Subranks: ";
-        for(Rank r:online.getSubRanks()) info += r.getName();
+        for (Rank r : online.getSubRanks()) {
+            info += r.getName();
+        }
         BaseComponent[] baseComponents = TextComponent.fromLegacyText(info);
-        for(BaseComponent b:baseComponents)b.setHoverEvent(hoverEvent);
+        for (BaseComponent b : baseComponents) {
+            b.setHoverEvent(hoverEvent);
+        }
         return baseComponents;
     }
 }

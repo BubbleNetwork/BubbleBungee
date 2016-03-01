@@ -19,31 +19,33 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 
-public class ReloadCommand extends SimpleCommand{
+public class ReloadCommand extends SimpleCommand {
     private BungeePlugman plugman;
 
-    public ReloadCommand(String prefix,BungeePlugman plugman) {
-        super(prefix + "reload", "bungeeplugman.reloadall","/" + prefix + "reload",prefix + "rl");
+    public ReloadCommand(String prefix, BungeePlugman plugman) {
+        super(prefix + "reload", "bungeeplugman.reloadall", "/" + prefix + "reload", prefix + "rl");
         this.plugman = plugman;
     }
 
     public BaseComponent[] Iexecute(final CommandSender sender, String[] args) throws CommandException {
-        if(Updatetask.instance != null)throw new CommandException("Cannot reload while updatetask is running!",this);
+        if (Updatetask.instance != null) {
+            throw new CommandException("Cannot reload while updatetask is running!", this);
+        }
         plugman.getServer().getScheduler().runAsync(BubbleBungee.getInstance().getPlugin(), new Runnable() {
             public void run() {
                 final Collection<Plugin> pluginCollection = plugman.getPlugins();
-                new Thread(){
+                new Thread() {
                     public void run() {
                         Set<Plugin> plugins = new HashSet<>();
                         plugins.addAll(pluginCollection);
-                        for(Plugin plugin:plugins){
+                        for (Plugin plugin : plugins) {
                             String name = plugin.getDescription().getName();
                             String version = plugin.getDescription().getVersion();
                             File file = plugin.getFile();
                             try {
                                 plugman.unload(plugin);
                             } catch (Throwable throwable) {
-                                plugman.getServer().getLogger().log(Level.WARNING,"An error occurred while unloading " + name + " v" + version + " (" + file.getPath() + ")");
+                                plugman.getServer().getLogger().log(Level.WARNING, "An error occurred while unloading " + name + " v" + version + " (" + file.getPath() + ")");
                             }
                         }
                         plugman.reset_toLoad();
@@ -55,7 +57,7 @@ public class ReloadCommand extends SimpleCommand{
                         c.setColor(ChatColor.GREEN);
                         c.setUnderlined(true);
                         c.setBold(true);
-                        c.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,TextComponent.fromLegacyText(ChatColor.GOLD + "All plugins on the bungeecord have been")));
+                        c.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.GOLD + "All plugins on the bungeecord have been")));
                         sender.sendMessage(c);
                     }
                 }.start();
@@ -65,7 +67,7 @@ public class ReloadCommand extends SimpleCommand{
         c.setColor(ChatColor.GREEN);
         c.setUnderlined(true);
         c.setBold(true);
-        c.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,TextComponent.fromLegacyText(ChatColor.GOLD + "All plugins on the bungeecord are being reloaded")));
+        c.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.GOLD + "All plugins on the bungeecord are being reloaded")));
         return new BaseComponent[]{c};
     }
 }

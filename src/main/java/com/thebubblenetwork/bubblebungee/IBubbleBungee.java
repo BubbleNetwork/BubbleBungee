@@ -19,10 +19,16 @@ import java.util.UUID;
 
 public interface IBubbleBungee extends BubbleHub<Plugin> {
     ServerManager getManager();
+
     P getPlugin();
+
     PlayerData loadData(UUID load) throws SQLException, ClassNotFoundException;
+
     void updateRank(Rank r);
+
     void updatePlayer(BubblePlayer p);
+
     BubbleListener getListener();
+
     BungeePlugman getPlugman();
 }

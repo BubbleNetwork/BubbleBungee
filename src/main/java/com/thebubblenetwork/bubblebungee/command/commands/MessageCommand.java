@@ -23,48 +23,52 @@ import java.util.Date;
  * 17/02/2016 {08:41}
  * Created February 2016
  */
-public class MessageCommand extends SimpleCommand{
+public class MessageCommand extends SimpleCommand {
     public MessageCommand() {
-        super("msg", null, "/msg <player> <message>", "message","mail","tell","whisper","t","m");
+        super("msg", null, "/msg <player> <message>", "message", "mail", "tell", "whisper", "t", "m");
     }
 
     public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
-        if(args.length < 2)throw invalidUsage();
+        if (args.length < 2) {
+            throw invalidUsage();
+        }
         String target = args[0];
         ProxiedBubblePlayer player = ProxiedBubblePlayer.getObject(target);
-        if(player == null)throw new CommandException("Player not found",this);
-        String message = Joiner.on(" ").join(new ArgTrimmer<>(String.class,args).trim(1));
+        if (player == null) {
+            throw new CommandException("Player not found", this);
+        }
+        String message = Joiner.on(" ").join(new ArgTrimmer<>(String.class, args).trim(1));
         TextComponent space = new TextComponent(" ");
         TextComponent senderprefix = new TextComponent("[You -> " + player.getNickName() + "]");
         String name = sender.getName();
-        if(sender instanceof ProxiedPlayer){
+        if (sender instanceof ProxiedPlayer) {
             ProxiedBubblePlayer senderplayer = ProxiedBubblePlayer.getObject(((ProxiedPlayer) sender).getUniqueId());
             name = senderplayer.getNickName();
         }
-        TextComponent playerprefix = new TextComponent("[" +  name + " -> You]");
+        TextComponent playerprefix = new TextComponent("[" + name + " -> You]");
         playerprefix.setColor(ChatColor.GOLD);
         senderprefix.setColor(ChatColor.GOLD);
-        HoverEvent messageprefixhover = new HoverEvent(HoverEvent.Action.SHOW_TEXT,TextComponent.fromLegacyText(ChatColor.GOLD + "Send a message with " + getUsage()));
+        HoverEvent messageprefixhover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.GOLD + "Send a message with " + getUsage()));
         playerprefix.setHoverEvent(messageprefixhover);
         senderprefix.setHoverEvent(messageprefixhover);
-        playerprefix.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND,"/msg " + name + " "));
-        senderprefix.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND,"/msg " + player.getNickName() + " "));
+        playerprefix.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/msg " + name + " "));
+        senderprefix.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/msg " + player.getNickName() + " "));
 
 
         String ranks = player.getRank().getName();
-        for(Rank r:player.getSubRanks())ranks += ", " + r.getName();
+        for (Rank r : player.getSubRanks()) {
+            ranks += ", " + r.getName();
+        }
 
-        HoverEvent sendermessageinfo = new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                TextComponent.fromLegacyText(
-                        "Name: " + ChatColor.GRAY + player.getName() +
-                        "\nSent at " + ChatColor.GRAY + BubbleBungee.getInstance().getListener().format.format(new Date()) +
-                        "\nRank: " + ChatColor.GRAY + ranks));
+        HoverEvent sendermessageinfo = new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText("Name: " + ChatColor.GRAY + player.getName() +
+                "\nSent at " + ChatColor.GRAY + BubbleBungee.getInstance().getListener().format.format(new Date()) +
+                "\nRank: " + ChatColor.GRAY + ranks));
         TextComponent messagetext = new TextComponent(message);
         messagetext.setHoverEvent(sendermessageinfo);
 
-        if(player.getPlayer() != null){
-            player.getPlayer().sendMessage(playerprefix,space,messagetext);
+        if (player.getPlayer() != null) {
+            player.getPlayer().sendMessage(playerprefix, space, messagetext);
         }
-        return new BaseComponent[]{senderprefix,space,messagetext};
+        return new BaseComponent[]{senderprefix, space, messagetext};
     }
 }

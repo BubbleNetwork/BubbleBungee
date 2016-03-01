@@ -19,47 +19,51 @@ public class PlugmanCommand extends BaseCommand {
     private BungeePlugman plugman;
 
     public PlugmanCommand(final BungeePlugman plugman) {
-        super("bungeeplugman", "bungeeplugman.use",
-                new ImmutableSet.Builder<ICommand>()
-                        .add(new ReloadCommand("",plugman))
-                        .add(new SubCommand("unload","bungeeplugman.unload","unload <plugin>") {
-                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
-                                if(args.length == 0)throw invalidUsage();
-                                String pluginname = args[0];
-                                Plugin plugin = plugman.get(pluginname);
-                                if(plugin == null)throw  new CommandException("Could not find a plugin with that name",this);
-                                pluginname = plugin.getDescription().getName();
-                                plugman.unload(plugin);
-                                TextComponent c = new TextComponent("Unloaded " + pluginname + ", check console for errors");
-                                c.setColor(ChatColor.GREEN);
-                                c.setBold(true);
-                                c.setUnderlined(true);
-                                return new BaseComponent[]{c};
-                            }
-                        })
-                        .add(new SubCommand("load","bungeeplugman.load","load <file>") {
-                            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
-                                if(args.length == 0)throw invalidUsage();
-                                String filename = Joiner.on(" ").join(args);
-                                if(!filename.endsWith(".jar"))throw new CommandException("File must be a jar",this);
-                                String filepath = "plugins" + File.separator + filename;
-                                File file = new File(filepath);
-                                if(!file.isFile())throw new CommandException("File must be a jar",this);
-                                Plugin plugin = plugman.load(file);
-                                plugman.enable(plugin);
-                                TextComponent c = new TextComponent("Plugin loaded, check console for errors");
-                                c.setColor(ChatColor.GREEN);
-                                c.setBold(true);
-                                c.setUnderlined(true);
-                                return new BaseComponent[]{c};
-                            }
-                        })
-                        .build(),
-                "bplugman","bpm","bplugin","bmanager");
+        super("bungeeplugman", "bungeeplugman.use", new ImmutableSet.Builder<ICommand>().add(new ReloadCommand("", plugman)).add(new SubCommand("unload", "bungeeplugman.unload", "unload <plugin>") {
+            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                if (args.length == 0) {
+                    throw invalidUsage();
+                }
+                String pluginname = args[0];
+                Plugin plugin = plugman.get(pluginname);
+                if (plugin == null) {
+                    throw new CommandException("Could not find a plugin with that name", this);
+                }
+                pluginname = plugin.getDescription().getName();
+                plugman.unload(plugin);
+                TextComponent c = new TextComponent("Unloaded " + pluginname + ", check console for errors");
+                c.setColor(ChatColor.GREEN);
+                c.setBold(true);
+                c.setUnderlined(true);
+                return new BaseComponent[]{c};
+            }
+        }).add(new SubCommand("load", "bungeeplugman.load", "load <file>") {
+            public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
+                if (args.length == 0) {
+                    throw invalidUsage();
+                }
+                String filename = Joiner.on(" ").join(args);
+                if (!filename.endsWith(".jar")) {
+                    throw new CommandException("File must be a jar", this);
+                }
+                String filepath = "plugins" + File.separator + filename;
+                File file = new File(filepath);
+                if (!file.isFile()) {
+                    throw new CommandException("File must be a jar", this);
+                }
+                Plugin plugin = plugman.load(file);
+                plugman.enable(plugin);
+                TextComponent c = new TextComponent("Plugin loaded, check console for errors");
+                c.setColor(ChatColor.GREEN);
+                c.setBold(true);
+                c.setUnderlined(true);
+                return new BaseComponent[]{c};
+            }
+        }).build(), "bplugman", "bpm", "bplugin", "bmanager");
         this.plugman = plugman;
     }
 
-    public BungeePlugman getPlugman(){
+    public BungeePlugman getPlugman() {
         return plugman;
     }
 }

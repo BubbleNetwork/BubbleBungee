@@ -20,9 +20,7 @@ public class Party {
 
     static {
         prefix.setColor(ChatColor.RED);
-        prefix.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,TextComponent.fromLegacyText(
-                ChatColor.RED + "Party party party!"
-        )));
+        prefix.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.RED + "Party party party!")));
     }
 
     private UUID leader;
@@ -45,76 +43,92 @@ public class Party {
         return members;
     }
 
-    public void disband(String reason){
+    public void disband(String reason) {
         TextComponent invitecancelled = new TextComponent("Your invite has been cancelled");
         invitecancelled.setColor(ChatColor.GOLD);
-        broadcastToInvitees(new BaseComponent[]{prefix,invitecancelled});
+        broadcastToInvitees(new BaseComponent[]{prefix, invitecancelled});
         invited.clear();
         TextComponent disbandmsg = new TextComponent(reason);
         disbandmsg.setColor(ChatColor.GOLD);
-        broadcast(new BaseComponent[]{prefix,disbandmsg});
+        broadcast(new BaseComponent[]{prefix, disbandmsg});
     }
 
-    public void invite(ProxiedPlayer invite,String reason){
-        if(isInvited(invite))throw new IllegalArgumentException("Already invited");
-        if(isMember(invite))throw new IllegalArgumentException("Already a member");
+    public void invite(ProxiedPlayer invite, String reason) {
+        if (isInvited(invite)) {
+            throw new IllegalArgumentException("Already invited");
+        }
+        if (isMember(invite)) {
+            throw new IllegalArgumentException("Already a member");
+        }
         invited.add(invite.getUniqueId());
         TextComponent c = new TextComponent(reason);
         c.setColor(ChatColor.GOLD);
-        broadcast(new BaseComponent[]{prefix,c});
+        broadcast(new BaseComponent[]{prefix, c});
     }
 
-    public void cancelInvite(ProxiedPlayer invite,String reason){
-        if(!isInvited(invite))throw new IllegalArgumentException("Not invited");
-        if(isMember(invite))throw new IllegalArgumentException("Already a member");
+    public void cancelInvite(ProxiedPlayer invite, String reason) {
+        if (!isInvited(invite)) {
+            throw new IllegalArgumentException("Not invited");
+        }
+        if (isMember(invite)) {
+            throw new IllegalArgumentException("Already a member");
+        }
         TextComponent c = new TextComponent(reason);
         c.setColor(ChatColor.GOLD);
-        broadcast(new BaseComponent[]{prefix,c});
+        broadcast(new BaseComponent[]{prefix, c});
     }
 
-    public void addMember(ProxiedPlayer member,String reason){
-        if(!isInvited(member))throw new IllegalArgumentException("Not invited");
-        if(isMember(member))throw new IllegalArgumentException("Already a member");
+    public void addMember(ProxiedPlayer member, String reason) {
+        if (!isInvited(member)) {
+            throw new IllegalArgumentException("Not invited");
+        }
+        if (isMember(member)) {
+            throw new IllegalArgumentException("Already a member");
+        }
         invited.remove(member.getUniqueId());
         members.add(member.getUniqueId());
         TextComponent c = new TextComponent(reason);
         c.setColor(ChatColor.GOLD);
-        broadcast(new BaseComponent[]{prefix,c});
+        broadcast(new BaseComponent[]{prefix, c});
     }
 
-    public void removeMember(ProxiedPlayer member,String reason){
-        if(!isMember(member))throw new IllegalArgumentException("Not a member");
-        if(isLeader(member))throw new IllegalArgumentException("Cannot disband when leader");
+    public void removeMember(ProxiedPlayer member, String reason) {
+        if (!isMember(member)) {
+            throw new IllegalArgumentException("Not a member");
+        }
+        if (isLeader(member)) {
+            throw new IllegalArgumentException("Cannot disband when leader");
+        }
         getMembers().remove(member.getUniqueId());
         TextComponent c = new TextComponent(reason);
         c.setColor(ChatColor.GOLD);
-        broadcast(new BaseComponent[]{prefix,c});
+        broadcast(new BaseComponent[]{prefix, c});
     }
 
-    public boolean isInvited(ProxiedPlayer player){
+    public boolean isInvited(ProxiedPlayer player) {
         return getInvited().contains(player.getUniqueId());
     }
 
-    public boolean isMember(ProxiedPlayer player){
+    public boolean isMember(ProxiedPlayer player) {
         return getMembers().contains(player.getUniqueId());
     }
 
-    public boolean isLeader(ProxiedPlayer player){
+    public boolean isLeader(ProxiedPlayer player) {
         return getLeader() == player.getUniqueId();
     }
 
-    public void broadcast(BaseComponent[] baseComponents){
-        for(ProxiedPlayer player: ProxyServer.getInstance().getPlayers()){
-            if(isMember(player)){
-                player.sendMessage(ChatMessageType.CHAT,baseComponents);
+    public void broadcast(BaseComponent[] baseComponents) {
+        for (ProxiedPlayer player : ProxyServer.getInstance().getPlayers()) {
+            if (isMember(player)) {
+                player.sendMessage(ChatMessageType.CHAT, baseComponents);
             }
         }
     }
 
-    public void broadcastToInvitees(BaseComponent[] baseComponents){
-        for(ProxiedPlayer player: ProxyServer.getInstance().getPlayers()){
-            if(isInvited(player)){
-                player.sendMessage(ChatMessageType.CHAT,baseComponents);
+    public void broadcastToInvitees(BaseComponent[] baseComponents) {
+        for (ProxiedPlayer player : ProxyServer.getInstance().getPlayers()) {
+            if (isInvited(player)) {
+                player.sendMessage(ChatMessageType.CHAT, baseComponents);
             }
         }
     }
