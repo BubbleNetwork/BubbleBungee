@@ -3,7 +3,6 @@ package com.thebubblenetwork.bubblebungee.player;
 import com.thebubblenetwork.api.global.data.InvalidBaseException;
 import com.thebubblenetwork.api.global.data.PlayerData;
 import com.thebubblenetwork.api.global.player.BubblePlayer;
-import com.thebubblenetwork.api.global.player.BubblePlayerObject;
 import com.thebubblenetwork.bubblebungee.BubbleBungee;
 import com.thebubblenetwork.bubblebungee.party.Party;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -27,7 +26,7 @@ import java.util.UUID;
  * Project: BubbleBungee
  */
 
-public class ProxiedBubblePlayer extends BubblePlayerObject<ProxiedPlayer> implements BubblePlayer<ProxiedPlayer> {
+public class ProxiedBubblePlayer extends BubblePlayer<ProxiedPlayer>{
 
     public static ProxiedBubblePlayer getObject(UUID u) {
         return (ProxiedBubblePlayer) getPlayerObjectMap().get(u);
