@@ -2,7 +2,7 @@ package com.thebubblenetwork.bubblebungee.servermanager;
 
 import com.thebubblenetwork.api.global.bubblepackets.PacketInfo;
 import com.thebubblenetwork.api.global.type.ServerType;
-import com.thebubblenetwork.bubblebungee.IBubbleBungee;
+import com.thebubblenetwork.bubblebungee.BubbleBungee;
 import de.mickare.xserver.net.XServer;
 import net.md_5.bungee.api.config.ServerInfo;
 
@@ -18,16 +18,16 @@ import java.util.logging.Level;
  */
 
 public class ServerManager {
-    private IBubbleBungee bungee;
+    private BubbleBungee bungee;
 
     private Set<BubbleServer> servers = new HashSet<>();
     private Set<PacketInfo> unassigned = new HashSet<>();
 
-    public ServerManager(IBubbleBungee bungee) {
+    public ServerManager(BubbleBungee bungee) {
         this.bungee = bungee;
     }
 
-    protected IBubbleBungee getBungee() {
+    protected BubbleBungee getBungee() {
         return bungee;
     }
 

@@ -35,6 +35,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The Bubble Network 2016
@@ -62,17 +63,17 @@ public class BubbleListener implements Listener, PacketListener {
     public final DateFormat format = new SimpleDateFormat("hh:mm:ss");
     private final String errormsg = ChatColor.RED + "An internal error has occurred please report this to @ExtendObject";
     private Map<UUID, Runnable> toExecute = new HashMap<>();
-    private IBubbleBungee bungee;
+    private BubbleBungee bungee;
     private String line1 = ChatColor.AQUA + ChatColor.BOLD.toString() + "BubbleNetwork" + spacer;
     private String line2 = ChatColor.BLUE + " Come and join the fun!";
     private List<String> sample = Arrays.asList(ChatColor.AQUA + ChatColor.UNDERLINE.toString() + "BubbleNetwork", "", ChatColor.BLUE + "Site " + ChatColor.GRAY + ChatColor.ITALIC.toString() + "thebubblenetwork.com");
     private List<String> requestqueue = new ArrayList<>();
 
-    public BubbleListener(IBubbleBungee bungee) {
+    public BubbleListener(BubbleBungee bungee) {
         this.bungee = bungee;
     }
 
-    protected IBubbleBungee getBungee() {
+    protected BubbleBungee getBungee() {
         return bungee;
     }
 
@@ -311,7 +312,7 @@ public class BubbleListener implements Listener, PacketListener {
                     getBungee().logSevere("Could not find bubbleserver " + request.getTo());
                 }
             } else {
-                getBungee().logSevere("Could not find player " + request.getName());
+                getBungee().getLogger().log(Level.INFO,"Could not find player " + request.getName());
             }
         } else if (message instanceof PlayerMoveTypeRequest) {
             PlayerMoveTypeRequest request = (PlayerMoveTypeRequest) message;

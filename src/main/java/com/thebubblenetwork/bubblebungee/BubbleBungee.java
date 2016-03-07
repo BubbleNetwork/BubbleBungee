@@ -5,7 +5,7 @@ import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response
 import com.thebubblenetwork.api.global.data.DataObject;
 import com.thebubblenetwork.api.global.data.PlayerData;
 import com.thebubblenetwork.api.global.player.BubblePlayer;
-import com.thebubblenetwork.api.global.plugin.BubbleHubObject;
+import com.thebubblenetwork.api.global.plugin.BubbleHub;
 import com.thebubblenetwork.api.global.ranks.Rank;
 import com.thebubblenetwork.api.global.sql.SQLUtil;
 import com.thebubblenetwork.bubblebungee.command.ICommand;
@@ -37,19 +37,19 @@ import java.util.logging.Logger;
  * Created January 2016
  */
 
-public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBungee {
+public class BubbleBungee extends BubbleHub<Plugin> {
 
     private static final int VERSION = 12;
 
-    public static IBubbleBungee getInstance() {
+    public static BubbleBungee getInstance() {
         return instance;
     }
 
-    public static void setInstance(IBubbleBungee instance) {
+    public static void setInstance(BubbleBungee instance) {
         BubbleBungee.instance = instance;
     }
 
-    private static IBubbleBungee instance;
+    private static BubbleBungee instance;
     private ServerManager manager;
     private BubbleListener listener;
     private P plugin;
@@ -230,9 +230,8 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
         }
     }
 
-    public void endSetup(String s) throws RuntimeException {
-        getPlugin().getProxy().stop(s);
-        throw new IllegalArgumentException(s);
+    public void stop(){
+        getPlugin().getProxy().stop();
     }
 
     public Logger getLogger() {
@@ -266,7 +265,7 @@ public class BubbleBungee extends BubbleHubObject<Plugin> implements IBubbleBung
 
     public void loadRanks() throws SQLException, ClassNotFoundException {
         Rank.getRanks().clear();
-        ResultSet set = SQLUtil.query(BubbleHubObject.getInstance().getConnection(), "ranks", "*", new SQLUtil.Where("1"));
+        ResultSet set = SQLUtil.query(getConnection(), "ranks", "*", new SQLUtil.Where("1"));
         Map<String, Map<String, String>> map = new HashMap<>();
         while (set.next()) {
             String rankname = set.getString("rank");

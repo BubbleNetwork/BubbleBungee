@@ -18,7 +18,7 @@ import net.md_5.bungee.api.plugin.Plugin;
  * Project: BubbleBungee
  */
 public class P extends Plugin {
-    private IBubbleBungee bubbleBungee;
+    private BubbleBungee bubbleBungee;
 
     public P() {
         super();
