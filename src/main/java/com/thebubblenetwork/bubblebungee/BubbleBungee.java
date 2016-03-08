@@ -14,6 +14,7 @@ import com.thebubblenetwork.bubblebungee.command.commands.*;
 import com.thebubblenetwork.bubblebungee.servermanager.BubbleServer;
 import com.thebubblenetwork.bubblebungee.servermanager.ServerManager;
 import de.mickare.xserver.XServerPlugin;
+import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
@@ -73,8 +74,8 @@ public class BubbleBungee extends BubbleHub<Plugin> {
         try {
             loadRanks();
         } catch (Exception e) {
-            logSevere(e.getMessage());
-            endSetup("Failed to load ranks");
+            getLogger().log(Level.WARNING,"Failed to load ranks",e);
+            endSetup("Failed to load Ranks...");
         }
 
         logInfo("Loaded ranks");
@@ -84,7 +85,7 @@ public class BubbleBungee extends BubbleHub<Plugin> {
         try {
             loadPlayerDataTable();
         } catch (Exception e) {
-            logSevere(e.getMessage());
+            getLogger().log(Level.WARNING,"Could not load PlayerData table",e);
             endSetup("Failed to load PlayerData table...");
         }
 
@@ -130,8 +131,7 @@ public class BubbleBungee extends BubbleHub<Plugin> {
             try {
                 r.getData().save("ranks", "rank", r.getName());
             } catch (SQLException | ClassNotFoundException e) {
-                logSevere(e.getMessage());
-                logSevere("Error saving rank " + r.getName());
+                getLogger().log(Level.WARNING,"Error saving rank " + r.getName(),e);
             }
         }
         setInstance(null);
@@ -179,7 +179,7 @@ public class BubbleBungee extends BubbleHub<Plugin> {
         try {
             c = YamlConfiguration.getProvider(YamlConfiguration.class).load(xserverconfig);
         } catch (IOException e) {
-            logSevere(e.getMessage());
+            getLogger().log(Level.WARNING,"Could not load XServer config",e);
             endSetup("Could not load XServer config");
             return;
         }
@@ -221,8 +221,7 @@ public class BubbleBungee extends BubbleHub<Plugin> {
             try {
                 getPacketHub().sendMessage(server.getServer(), update);
             } catch (IOException e) {
-                logSevere(e.getMessage());
-                logSevere("Error sending rank update message to " + server);
+                getLogger().log(Level.WARNING,"Error sending rank update message to " + server,e);
             }
         }
     }
@@ -237,7 +236,7 @@ public class BubbleBungee extends BubbleHub<Plugin> {
                 try {
                     getPacketHub().sendMessage(server.getServer(), response);
                 } catch (IOException e) {
-                    logSevere("Error sending packet to update: " + e.getMessage());
+                    getLogger().log(Level.WARNING,"Could not send player update",e);
                 }
             }
         }
@@ -251,25 +250,15 @@ public class BubbleBungee extends BubbleHub<Plugin> {
         if (getPlugin() != null) {
             return getPlugin().getLogger();
         }
-        return null;
+        return ProxyServer.getInstance().getLogger();
     }
 
     public void logInfo(String s) {
-        Logger l = getLogger();
-        if (l != null) {
-            l.info(s);
-        } else {
-            System.out.println("[BubbleBungee] " + s);
-        }
+        getLogger().log(Level.INFO,s);
     }
 
     public void logSevere(String s) {
-        Logger l = getLogger();
-        if (l != null) {
-            l.severe(s);
-        } else {
-            System.err.println("[BubbleBungee] " + s);
-        }
+        getLogger().log(Level.WARNING,s);
     }
 
     public void runTaskLater(Runnable runnable, long l, TimeUnit unit) {
