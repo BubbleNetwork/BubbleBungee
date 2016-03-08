@@ -4,10 +4,12 @@ import com.thebubblenetwork.api.global.bubblepackets.PacketInfo;
 import com.thebubblenetwork.api.global.type.ServerType;
 import com.thebubblenetwork.bubblebungee.BubbleBungee;
 import de.mickare.xserver.net.XServer;
+import io.netty.util.internal.ConcurrentSet;
 import net.md_5.bungee.api.config.ServerInfo;
 
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 /**
@@ -17,14 +19,24 @@ import java.util.logging.Level;
  * Created January 2016
  */
 
-public class ServerManager {
+public class ServerManager implements Runnable{
     private BubbleBungee bungee;
 
-    private Set<BubbleServer> servers = new HashSet<>();
-    private Set<PacketInfo> unassigned = new HashSet<>();
+    private Set<BubbleServer> servers = new ConcurrentSet<>();
+    private Set<PacketInfo> unassigned = new ConcurrentSet<>();
 
     public ServerManager(BubbleBungee bungee) {
         this.bungee = bungee;
+        getBungee().getPlugin().getProxy().getScheduler().schedule(getBungee().getPlugin(),this,15L, TimeUnit.SECONDS);
+    }
+
+    public void run(){
+        Iterator<BubbleServer> iterator = getServers().iterator();
+        BubbleServer current;
+        while(iterator.hasNext()){
+            current = iterator.next();
+            if(!current.getServer().isConnected())iterator.remove();
+        }
     }
 
     protected BubbleBungee getBungee() {
