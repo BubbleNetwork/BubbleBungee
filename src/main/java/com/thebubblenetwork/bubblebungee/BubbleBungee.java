@@ -78,6 +78,17 @@ public class BubbleBungee extends BubbleHub<Plugin> {
         }
 
         logInfo("Loaded ranks");
+        
+        logInfo("loading PlayerData table...");
+
+        try {
+            loadPlayerDataTable();
+        } catch (Exception e) {
+            logSevere(e.getMessage());
+            endSetup("Failed to load PlayerData table...");
+        }
+
+        logInfo("Loaded PlayerData table");
 
         logInfo("Setting up components");
 
@@ -293,6 +304,25 @@ public class BubbleBungee extends BubbleHub<Plugin> {
         for (Map.Entry<String, Map<String, String>> entry : map.entrySet()) {
             Rank.loadRank(entry.getKey(), entry.getValue());
             logInfo("Loaded rank: " + entry.getKey());
+        }
+    }
+    
+    public void loadPlayerDataTable() throws SQLException, ClassNotFoundException {
+        //check if the playerdata table exists
+        if (!SQLUtil.tableExists(getConnection(), "ranks")) {
+
+            //create the playerdata table
+            getLogger().log(Level.INFO, "PlayerData table does not exist, creating...");
+            getConnection().executeSQL("" +
+                    "CREATE TABLE `playerdata` (" +
+                    "'uuid' VARCHAR(255) NOT NULL," +
+                    "`value` TEXT NOT NULL," +
+                    "`key` TEXT NOT NULL," +
+                    "INDEX `uuid` (`uuid`)" +
+                    ");");
+
+            //log successful creation
+            getLogger().log(Level.INFO, "PlayerData table created successfully!");
         }
     }
 
