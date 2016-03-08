@@ -4,6 +4,7 @@ import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshak
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.PlayerDataResponse;
 import com.thebubblenetwork.api.global.data.DataObject;
 import com.thebubblenetwork.api.global.data.PlayerData;
+import com.thebubblenetwork.api.global.data.RankData;
 import com.thebubblenetwork.api.global.player.BubblePlayer;
 import com.thebubblenetwork.api.global.plugin.BubbleHub;
 import com.thebubblenetwork.api.global.ranks.Rank;
@@ -28,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -265,6 +267,20 @@ public class BubbleBungee extends BubbleHub<Plugin> {
 
     public void loadRanks() throws SQLException, ClassNotFoundException {
         Rank.getRanks().clear();
+        if(!SQLUtil.tableExists(getConnection(),"ranks")){
+            getLogger().log(Level.INFO,"Rank table does not exist, creating...");
+            getConnection().executeSQL("" +
+                    "CREATE TABLE `ranks` (" +
+                    "`rank` VARCHAR(32) NOT NULL DEFAULT 'default'," +
+                    "`value` TEXT NOT NULL," +
+                    "`key` TEXT NOT NULL," +
+                    "INDEX `rank` (`rank`)" +
+                    ");");
+            RankData defaultrank = new RankData(new HashMap<String,String>());
+            defaultrank.set("default",true);
+            Rank.loadRank("default",defaultrank.getRaw());
+            getLogger().log(Level.INFO,"Created ranks table");
+        }
         ResultSet set = SQLUtil.query(getConnection(), "ranks", "*", new SQLUtil.Where("1"));
         Map<String, Map<String, String>> map = new HashMap<>();
         while (set.next()) {
