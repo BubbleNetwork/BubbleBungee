@@ -16,6 +16,8 @@ import java.util.UUID;
  * Created by User on 18/02/2016.
  */
 public class SetTokenCommand extends SimpleCommand {
+    private static BubbleBungee instance = BubbleBungee.getInstance();
+
     public SetTokenCommand() {
         super("settokens", "token.settokens", "/settokens <player> <tokens>", "settoken");
     }
@@ -29,12 +31,12 @@ public class SetTokenCommand extends SimpleCommand {
         boolean forcesave = false;
         if (online == null) {
             forcesave = true;
-            UUID u = TokenCommand.getUUID(name);
+            UUID u = instance.getUUID(name);
             if (u == null) {
                 throw new CommandException("Player not found", this);
             }
             try {
-                online = new ProxiedBubblePlayer(u, BubbleBungee.getInstance().loadData(u));
+                online = instance.getDataOffline(u);
             } catch (Exception e) {
                 throw new CommandException("Player not found", this);
             }

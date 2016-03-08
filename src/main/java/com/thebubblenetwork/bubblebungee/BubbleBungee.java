@@ -1,5 +1,6 @@
 package com.thebubblenetwork.bubblebungee;
 
+import com.google.common.base.Preconditions;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshake.RankDataUpdate;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.PlayerDataResponse;
 import com.thebubblenetwork.api.global.data.DataObject;
@@ -8,9 +9,11 @@ import com.thebubblenetwork.api.global.data.RankData;
 import com.thebubblenetwork.api.global.player.BubblePlayer;
 import com.thebubblenetwork.api.global.plugin.BubbleHub;
 import com.thebubblenetwork.api.global.ranks.Rank;
+import com.thebubblenetwork.api.global.sql.SQLConnection;
 import com.thebubblenetwork.api.global.sql.SQLUtil;
 import com.thebubblenetwork.bubblebungee.command.ICommand;
 import com.thebubblenetwork.bubblebungee.command.commands.*;
+import com.thebubblenetwork.bubblebungee.player.ProxiedBubblePlayer;
 import com.thebubblenetwork.bubblebungee.servermanager.BubbleServer;
 import com.thebubblenetwork.bubblebungee.servermanager.ServerManager;
 import de.mickare.xserver.XServerPlugin;
@@ -24,6 +27,7 @@ import net.md_5.bungee.config.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -139,7 +143,7 @@ public class BubbleBungee extends BubbleHub<Plugin> {
     }
 
 
-    public PlayerData loadData(UUID load) throws SQLException, ClassNotFoundException {
+    protected PlayerData loadData(UUID load) throws SQLException, ClassNotFoundException {
         return new PlayerData(DataObject.loadData(SQLUtil.query(getConnection(), PlayerData.table, "*", new SQLUtil.WhereVar("uuid", load))));
     }
 
@@ -357,5 +361,84 @@ public class BubbleBungee extends BubbleHub<Plugin> {
 
     public void updateTaskAfter() {
         getPlugman().load(file);
+    }
+
+    public UUID getUUID(String name) {
+        ProxiedPlayer player;
+        if ((player = ProxyServer.getInstance().getPlayer(name)) != null) {
+            return player.getUniqueId();
+        }
+        for(char c:name.toCharArray()){
+            Preconditions.checkArgument(Character.isAlphabetic(c) || Character.isDigit(c),"Must be Alphanumeric");
+        }
+        //QUERY
+        String text = "SELECT `uuid` FROM `" + PlayerData.table + "` WHERE `key`=\"%key%\" AND `value`=\"" + name + "\"";
+        ResultSet set = null;
+        UUID u = null;
+        try {
+            //Querying for nickname
+            set = getConnection().querySQL(text.replace("%key%",PlayerData.NICKNAME));
+
+            //Checking for UUID
+            if(set.next()){
+                try{
+                    u = UUID.fromString(set.getString("uuid"));
+                }
+                catch (Exception ex){
+                }
+                if(u != null){
+                    return u;
+                }
+            }
+            //Closing SQL
+            set.close();
+
+            //Querying for name
+            set = getConnection().querySQL(text.replace("%key%",PlayerData.NAME));
+
+            //Checking for UUID
+            if(set.next()){
+                try{
+                    u = UUID.fromString(set.getString("uuid"));
+                }
+                catch (Exception ex){
+                }
+                if(u != null){
+                    return u;
+                }
+            }
+
+        } catch (SQLException|ClassNotFoundException ex) {
+            //Debug
+            BubbleBungee.getInstance().getLogger().log(Level.WARNING,"Error getting SQL data for " + name,ex);
+        }
+        finally {
+            //Making sure statement and resultset are closed
+            if (set != null) {
+                try {
+                    set.close();
+                } catch (Exception ex) {
+
+                }
+            }
+        }
+        return null;
+    }
+
+    public boolean isOnline(UUID u){
+        Preconditions.checkNotNull(u,"UUID cannot be null");
+        //Whether data is stored or not
+        return ProxiedBubblePlayer.getPlayerObjectMap().containsKey(u);
+    }
+
+    public ProxiedBubblePlayer getDataOffline(UUID u){
+        Preconditions.checkNotNull(u,"UUID cannot be null");
+        try {
+            return new ProxiedBubblePlayer(u,loadData(u));
+        } catch (Exception e) {
+            getLogger().log(Level.WARNING,"Could not load the offline playerdata of " + u,e);
+            //Nothing we can do
+            throw new IllegalArgumentException(e);
+        }
     }
 }

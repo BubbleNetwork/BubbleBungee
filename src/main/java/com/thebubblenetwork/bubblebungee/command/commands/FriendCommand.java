@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class FriendCommand extends BaseCommand {
+    private static BubbleBungee instance = BubbleBungee.getInstance();
     private static final String nowfriends = ChatColor.GOLD + "You are now friends with {0}", invitefriends = ChatColor.GOLD + "You sent a request to {0}", invitedfriends = "[Friend request from {0}]";
 
     private static void notSelf(ProxiedPlayer player1, ProxiedPlayer player2) {
@@ -58,6 +59,7 @@ public class FriendCommand extends BaseCommand {
         return uuidList;
     }
 
+    //TODO
     private static BaseComponent[] getPlayingInformation(UUID u) {
         ProxiedBubblePlayer player;
         if ((player = ProxiedBubblePlayer.getObject(u)) != null) {
@@ -90,49 +92,6 @@ public class FriendCommand extends BaseCommand {
                 return TextComponent.fromLegacyText(ChatColor.GOLD + set.getString("value") + ChatColor.RED + " (Offline) ");
             }
         } catch (SQLException | ClassNotFoundException ex) {
-        } finally {
-            if (set != null) {
-                try {
-                    set.close();
-                } catch (Exception ex) {
-
-                }
-            }
-        }
-        return null;
-    }
-
-    private static UUID getUUID(String name) {
-        ProxiedPlayer player;
-        if ((player = ProxyServer.getInstance().getPlayer(name)) != null) {
-            return player.getUniqueId();
-        }
-        SQLConnection connection = BubbleBungee.getInstance().getConnection();
-        final String s = "`key`=\"" + PlayerData.NAME + "\" AND `value`=\"" + name + "\"";
-        final String s2 = "`key`=\"" + PlayerData.NICKNAME + "\" AND `value`=\"" + name + "\"";
-        ResultSet set = null;
-        try {
-            set = SQLUtil.query(connection, PlayerData.table, "uuid", new SQLUtil.Where(null) {
-                @Override
-                public String getWhere() {
-                    return s;
-                }
-            });
-            if (set.next()) {
-                return UUID.fromString(set.getString("uuid"));
-            }
-            set.close();
-            set = SQLUtil.query(connection, PlayerData.table, "uuid", new SQLUtil.Where(null) {
-                @Override
-                public String getWhere() {
-                    return s2;
-                }
-            });
-            if (set.next()) {
-                return UUID.fromString(set.getString("uuid"));
-            }
-        } catch (SQLException | ClassNotFoundException ex) {
-            return null;
         } finally {
             if (set != null) {
                 try {
@@ -235,7 +194,7 @@ public class FriendCommand extends BaseCommand {
                 boolean forcesave = false;
                 if (online == null) {
                     forcesave = true;
-                    UUID u = getUUID(args[0]);
+                    UUID u = instance.getUUID(args[0]);
                     if (u == null) {
                         throw new CommandException("Player not found", this);
                     }
@@ -246,8 +205,7 @@ public class FriendCommand extends BaseCommand {
                         throw new CommandException("You are not friends with this player", this);
                     }
                     try {
-                        PlayerData manualget = BubbleBungee.getInstance().loadData(u);
-                        online = new ProxiedBubblePlayer(u, manualget);
+                        online = instance.getDataOffline(u);
                     } catch (Exception e) {
                         throw new CommandException("Player not found", this);
                     }

@@ -20,6 +20,7 @@ import java.util.UUID;
  * Created February 2016
  */
 public class WhoisCommand extends SimpleCommand {
+    private static BubbleBungee instance = BubbleBungee.getInstance();
     public WhoisCommand() {
         super("whois", "rankmanager.whois", "/whois <player>", "show", "who");
     }
@@ -31,12 +32,12 @@ public class WhoisCommand extends SimpleCommand {
         String playername = args[0];
         ProxiedBubblePlayer online = ProxiedBubblePlayer.getObject(playername);
         if (online == null) {
-            UUID u = RankCommand.getUUID(playername);
+            UUID u = instance.getUUID(playername);
             if (u == null) {
                 throw new CommandException("Player not found", this);
             }
             try {
-                online = new ProxiedBubblePlayer(u, BubbleBungee.getInstance().loadData(u));
+                online = instance.getDataOffline(u);
             } catch (Exception e) {
                 throw new CommandException("Player not found", this);
             }

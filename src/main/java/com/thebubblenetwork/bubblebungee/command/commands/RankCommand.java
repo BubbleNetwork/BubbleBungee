@@ -36,52 +36,7 @@ import java.util.*;
  * Created February 2016
  */
 public class RankCommand extends BaseCommand {
-    protected static UUID getUUID(String name) {
-        ProxiedPlayer player;
-        if ((player = ProxyServer.getInstance().getPlayer(name)) != null) {
-            return player.getUniqueId();
-        }
-        SQLConnection connection = BubbleBungee.getInstance().getConnection();
-        final String s = "`key`=\"" + PlayerData.NAME + "\" AND `value`=\"" + name + "\"";
-        final String s2 = "`key`=\"" + PlayerData.NICKNAME + "\" AND `value`=\"" + name + "\"";
-        ResultSet set = null;
-        try {
-            set = SQLUtil.query(connection, PlayerData.table, "uuid", new SQLUtil.Where(null) {
-                @Override
-                public String getWhere() {
-                    return s;
-                }
-            });
-            if (set.next()) {
-                return UUID.fromString(set.getString("uuid"));
-            }
-            set.close();
-            set = SQLUtil.query(connection, PlayerData.table, "uuid", new SQLUtil.Where(null) {
-                @Override
-                public String getWhere() {
-                    return s2;
-                }
-            });
-            if (set.next()) {
-                return UUID.fromString(set.getString("uuid"));
-            }
-        } catch (SQLException | ClassNotFoundException ex) {
-            return null;
-        } finally {
-            if (set != null) {
-                try {
-                    set.close();
-                } catch (Exception ex) {
-
-                }
-            }
-        }
-        return null;
-    }
-
-    private static void saveRank(Rank r) {
-        BubbleBungee.getInstance().updateRank(r);
-    }
+    private static BubbleBungee instance = BubbleBungee.getInstance();
 
     public RankCommand() {
         super("rankmanager", "rankmanager.use", new ImmutableSet.Builder<ICommand>().add(new SubCommand("list", "rankmanager.list", "list", "listranks", "groups", "ranks") {
@@ -111,7 +66,7 @@ public class RankCommand extends BaseCommand {
                 }
                 String prefix = Joiner.on(" ").join(new ArgTrimmer<>(String.class, args).trim(1)).replace("%20", " ");
                 r.setPrefix(prefix);
-                saveRank(r);
+                instance.updateRank(r);
                 return TextComponent.fromLegacyText(ChatColor.GOLD + "Successfuly set the prefix of \'" + r.getName() + "\' to \'" + ChatColor.translateAlternateColorCodes('&', prefix) + ChatColor.GOLD + "\'");
             }
         }).add(new SubCommand("setsuffix", "rankmanager.suffix", "setsuffix <rank> <suffix>", "suffix") {
@@ -126,7 +81,7 @@ public class RankCommand extends BaseCommand {
                 }
                 String suffix = Joiner.on(" ").join(new ArgTrimmer<>(String.class, args).trim(1)).replace("%20", " ");
                 r.setSuffix(suffix);
-                saveRank(r);
+                instance.updateRank(r);
                 return TextComponent.fromLegacyText(ChatColor.GOLD + "Successfuly set the suffix of \'" + r.getName() + "\' to \'" + ChatColor.translateAlternateColorCodes('&', suffix) + ChatColor.GOLD + "\'");
             }
         }).add(new SubCommand("setinheritance", "rankmanager.inheritance", "setinheritance <rank> <inheritance/none>", "inheritance") {
@@ -150,7 +105,7 @@ public class RankCommand extends BaseCommand {
                     toname = toset.getName();
                 }
                 r.setInheritance(toset);
-                saveRank(r);
+                instance.updateRank(r);
                 return TextComponent.fromLegacyText(ChatColor.GOLD + "Successfuly set the inheritance of \'" + r.getName() + "\' to \'" + toname + "\'");
             }
         }).add(new SubCommand("add", "rankmanager.addpermission", "add <rank> <permission>", "addpermission") {
@@ -177,7 +132,7 @@ public class RankCommand extends BaseCommand {
                     throw new CommandException("Invalid permission", this);
                 }
                 r.getData().set(permission, haspermission);
-                saveRank(r);
+                instance.updateRank(r);
                 return TextComponent.fromLegacyText(ChatColor.GOLD + "Successfuly set \'" + permission + " (" + String.valueOf(haspermission) + ") \' on rank \'" + r.getName() + "\'");
             }
         }).add(new SubCommand("remove", "rankmanager.removepermission", "remove <rank> <permission>", "removepermission") {
@@ -203,7 +158,7 @@ public class RankCommand extends BaseCommand {
                     throw new CommandException("This rank does not have that permission", this);
                 }
                 r.getData().getRaw().remove(permission);
-                saveRank(r);
+                instance.updateRank(r);
                 return TextComponent.fromLegacyText(ChatColor.GOLD + "Successfuly removed \'" + permission + "\' on rank \'" + r.getName() + "\'");
             }
         }).add(new SubCommand("info", "rankmanager.info", "info <rank>", "information") {
@@ -250,12 +205,12 @@ public class RankCommand extends BaseCommand {
                 boolean forcesave = false;
                 if (online == null) {
                     forcesave = true;
-                    UUID u = getUUID(playername);
+                    UUID u = instance.getUUID(playername);
                     if (u == null) {
                         throw new CommandException("Player not found", this);
                     }
                     try {
-                        online = new ProxiedBubblePlayer(u, BubbleBungee.getInstance().loadData(u));
+                        online = instance.getDataOffline(u);
                     } catch (Exception e) {
                         throw new CommandException("Player not found", this);
                     }
@@ -281,12 +236,12 @@ public class RankCommand extends BaseCommand {
                 boolean forcesave = false;
                 if (online == null) {
                     forcesave = true;
-                    UUID u = getUUID(playername);
+                    UUID u = instance.getUUID(playername);
                     if (u == null) {
                         throw new CommandException("Player not found", this);
                     }
                     try {
-                        online = new ProxiedBubblePlayer(u, BubbleBungee.getInstance().loadData(u));
+                        online = instance.getDataOffline(u);
                     } catch (Exception e) {
                         throw new CommandException("Player not found", this);
                     }
@@ -318,12 +273,12 @@ public class RankCommand extends BaseCommand {
                 boolean forcesave = false;
                 if (online == null) {
                     forcesave = true;
-                    UUID u = getUUID(playername);
+                    UUID u = instance.getUUID(playername);
                     if (u == null) {
                         throw new CommandException("Player not found", this);
                     }
                     try {
-                        online = new ProxiedBubblePlayer(u, BubbleBungee.getInstance().loadData(u));
+                        online = instance.getDataOffline(u);
                     } catch (Exception e) {
                         throw new CommandException("Player not found", this);
                     }
@@ -361,7 +316,7 @@ public class RankCommand extends BaseCommand {
                 }
                 Rank.getRanks().remove(r);
                 Rank fakerank = new Rank(r.getName(), new RankData(null));
-                saveRank(fakerank);
+                instance.updateRank(fakerank);
                 r.getData().getRaw().clear();
                 try {
                     r.getData().save("ranks", "rank", r.getName());
@@ -401,6 +356,7 @@ public class RankCommand extends BaseCommand {
                     otherrank.getData().set("default", false);
                 }
                 r.getData().set("default", true);
+                instance.updateRank(r);
                 return TextComponent.fromLegacyText(ChatColor.GOLD + "Successfully changed the default rank to \'" + r.getName() + "\'");
             }
         }).build(), "groupmanager", "pex", "permissionsex", "ranks", "rmanager", "rank", "ranksmanager");

@@ -15,9 +15,11 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
+import java.util.logging.Level;
 
 /**
  * The Bubble Network 2016
@@ -26,49 +28,7 @@ import java.util.UUID;
  * Created February 2016
  */
 public class TokenCommand extends SimpleCommand {
-    protected static UUID getUUID(String name) {
-        ProxiedPlayer player;
-        if ((player = ProxyServer.getInstance().getPlayer(name)) != null) {
-            return player.getUniqueId();
-        }
-        SQLConnection connection = BubbleBungee.getInstance().getConnection();
-        final String s = "`key`=\"" + PlayerData.NAME + "\" AND `value`=\"" + name + "\"";
-        final String s2 = "`key`=\"" + PlayerData.NICKNAME + "\" AND `value`=\"" + name + "\"";
-        ResultSet set = null;
-        try {
-            set = SQLUtil.query(connection, PlayerData.table, "uuid", new SQLUtil.Where(null) {
-                @Override
-                public String getWhere() {
-                    return s;
-                }
-            });
-            if (set.next()) {
-                return UUID.fromString(set.getString("uuid"));
-            }
-            set.close();
-            set = SQLUtil.query(connection, PlayerData.table, "uuid", new SQLUtil.Where(null) {
-                @Override
-                public String getWhere() {
-                    return s2;
-                }
-            });
-            if (set.next()) {
-                return UUID.fromString(set.getString("uuid"));
-            }
-        } catch (SQLException | ClassNotFoundException ex) {
-            return null;
-        } finally {
-            if (set != null) {
-                try {
-                    set.close();
-                } catch (Exception ex) {
-
-                }
-            }
-        }
-        return null;
-    }
-
+    private static BubbleBungee instance = BubbleBungee.getInstance();
 
     public TokenCommand() {
         super("tokens", null, "/tokens [other]", "token", "gettokens");
@@ -85,7 +45,6 @@ public class TokenCommand extends SimpleCommand {
             }
             c = new TextComponent("Your tokens: ");
             c.setColor(ChatColor.GOLD);
-            c.setUnderlined(true);
             c.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.GOLD + "The current amount of tokens you have")));
             amt = new TextComponent(String.valueOf(bubblePlayer.getTokens()));
             amt.setColor(ChatColor.RED);
@@ -96,12 +55,12 @@ public class TokenCommand extends SimpleCommand {
             String other = args[0];
             ProxiedBubblePlayer target = ProxiedBubblePlayer.getObject(other);
             if (target == null) {
-                UUID u = getUUID(other);
+                UUID u = instance.getUUID(other);
                 if (u == null) {
                     throw new CommandException("Player not found", this);
                 }
                 try {
-                    target = new ProxiedBubblePlayer(u, BubbleBungee.getInstance().loadData(u));
+                    target = instance.getDataOffline(u);
                 } catch (Exception e) {
                     throw new CommandException("Player not found", this);
                 }
