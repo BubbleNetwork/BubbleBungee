@@ -309,7 +309,7 @@ public class BubbleBungee extends BubbleHub<Plugin> {
     
     public void loadPlayerDataTable() throws SQLException, ClassNotFoundException {
         //check if the playerdata table exists
-        if (!SQLUtil.tableExists(getConnection(), "ranks")) {
+        if (!SQLUtil.tableExists(getConnection(), "playerdata")) {
 
             //create the playerdata table
             getLogger().log(Level.INFO, "PlayerData table does not exist, creating...");
