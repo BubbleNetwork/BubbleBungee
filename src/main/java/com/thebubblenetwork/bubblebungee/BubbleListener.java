@@ -16,6 +16,7 @@ import com.thebubblenetwork.api.global.data.InvalidBaseException;
 import com.thebubblenetwork.api.global.data.PlayerData;
 import com.thebubblenetwork.api.global.ranks.Rank;
 import com.thebubblenetwork.api.global.type.ServerType;
+import com.thebubblenetwork.bubblebungee.party.Party;
 import com.thebubblenetwork.bubblebungee.player.ProxiedBubblePlayer;
 import com.thebubblenetwork.bubblebungee.servermanager.BubbleServer;
 import de.mickare.xserver.net.XServer;
@@ -230,9 +231,9 @@ public class BubbleListener implements Listener, PacketListener {
                 if (LOBBY == null) {
                     throw new IllegalArgumentException("Lobby type doesn't exist");
                 }
-                server = getBungee().getManager().getAvailble(LOBBY, true, true);
+                server = getBungee().getManager().getAvailble(LOBBY,1, true, true);
                 if (server == null) {
-                    server = getBungee().getManager().getAvailble(LOBBY, true, false);
+                    server = getBungee().getManager().getAvailble(LOBBY,1, true, false);
                     if (server == null) {
                         e.setCancelled(true);
                         e.getPlayer().disconnect(TextComponent.fromLegacyText(ChatColor.RED + "No lobbies open at the moment"));
@@ -318,23 +319,49 @@ public class BubbleListener implements Listener, PacketListener {
             PlayerMoveTypeRequest request = (PlayerMoveTypeRequest) message;
             ProxiedPlayer player = getBungee().getPlugin().getProxy().getPlayer(request.getName());
             if (request.getServerType() != null && player != null) {
-                BubbleServer server = getBungee().getManager().getAvailble(request.getServerType(), true, true);
-                if (server == null) {
-                    server = getBungee().getManager().getAvailble(request.getServerType(), true, false);
+                ProxiedBubblePlayer bubblePlayer = ProxiedBubblePlayer.getObject(player.getUniqueId());
+                int i = 1;
+                Set<UUID> send = null;
+                if(request.getServerType() != ServerType.getType("Lobby")){
+                    Party p = bubblePlayer.getParty();
+                    if(p != null && p.isMember(player)){
+                        if(p.isLeader(player)){
+                            i = p.getMembers().size();
+                            send = p.getMembers();
+                            send.remove(p.getLeader());
+                        }
+                        else {
+                            player.sendMessage(new ComponentBuilder("You need to be party leader to travel to another server").color(ChatColor.BLUE).create());
+                            return;
+                        }
+                    }
                 }
+                BubbleServer server = getBungee().getManager().getAvailble(request.getServerType(),i, true, false);
+                if (server == null) {
+                    server = getBungee().getManager().getAvailble(request.getServerType(),i, true, false);
+                }
+
                 if (server == null) {
                     if (!getBungee().getManager().getUnassigned().isEmpty()) {
                         PacketInfo serverinfo = Iterables.get(getBungee().getManager().getUnassigned(), 0);
                         getBungee().getManager().getUnassigned().remove(serverinfo);
                         sendPacketSafe(serverinfo.getServer(), new AssignMessage(getBungee().getManager().getNewID(request.getServerType()), request.getServerType()));
-                        player.sendMessage(ChatMessageType.CHAT, new ComponentBuilder("Please wait a few seconds, a server is being created").color(ChatColor.RED).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.GOLD + "This will take about 5 seconds"))).create());
+                        player.sendMessage(ChatMessageType.CHAT, new ComponentBuilder("Please wait a few seconds, a server is being created").color(ChatColor.BLUE).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.BLUE + "This will take about 5 seconds"))).create());
                     } else {
-                        player.sendMessage(new ComponentBuilder("No servers open at the moment").color(ChatColor.RED).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.GOLD + "A server will be open soon"))).create());
+                        player.sendMessage(new ComponentBuilder("No servers open at the moment").color(ChatColor.BLUE).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.GOLD + "A server will be open soon"))).create());
                         getBungee().logSevere("Couldn't find any server types for " + request.getServerType().getName());
                     }
                 } else {
-                    player.sendMessage(new ComponentBuilder("Connecting you to ").color(ChatColor.RED).append(server.getType().getName() + "-" + server.getId()).color(ChatColor.YELLOW).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.GRAY + server.getType().getName() + "\nID: " + server.getId() + "\nOnline: " + server.getPlayercount() + "/" + server.getMaxplayercount()))).create());
+                    if(send != null) {
+                        for (UUID u : send) {
+                            ProxiedPlayer other = getBungee().getPlugin().getProxy().getPlayer(u);
+                            other.sendMessage(new ComponentBuilder("Connecting you to ").color(ChatColor.BLUE).append(server.getType().getName() + "-" + server.getId()).color(ChatColor.AQUA).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.BLUE + server.getType().getName() + "\nID: " + server.getId() + "\nOnline: " + server.getPlayercount() + "/" + server.getMaxplayercount()))).create());
+                            other.connect(server.getInfo());
+                        }
+                    }
+                    player.sendMessage(new ComponentBuilder("Connecting you to ").color(ChatColor.BLUE).append(server.getType().getName() + "-" + server.getId()).color(ChatColor.AQUA).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.BLUE + server.getType().getName() + "\nID: " + server.getId() + "\nOnline: " + server.getPlayercount() + "/" + server.getMaxplayercount()))).create());
                     player.connect(server.getInfo());
+                    server.setPlayercount(server.getPlayercount() + i);
                 }
             } else {
                 getBungee().logSevere("Could proccess player request " + request.getName());

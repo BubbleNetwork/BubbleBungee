@@ -110,12 +110,12 @@ public class ServerManager implements Runnable{
         servers.remove(server);
     }
 
-    public BubbleServer getAvailble(ServerType type, boolean joinable, boolean playercount) {
+    public BubbleServer getAvailble(ServerType type,int needed, boolean joinable, boolean playercount) {
         if (type == null) {
             throw new IllegalArgumentException("Type cannot be null");
         }
         for (BubbleServer server : getServers()) {
-            if (server.getType() != null && type.getName().equals(server.getType().getName()) && (!joinable || server.isJoinable()) && (!playercount || server.getPlayercount() < server.getMaxplayercount())) {
+            if (server.getType() != null && type.getName().equals(server.getType().getName()) && (!joinable || server.isJoinable()) && (!playercount || server.getPlayercount() + needed <= server.getMaxplayercount())) {
                 return server;
             }
         }
