@@ -10,6 +10,7 @@ import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshak
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshake.PlayerCountUpdate;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshake.RankDataUpdate;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.request.*;
+import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.AntiCheatViolationMessage;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.PlayerDataResponse;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.ServerListResponse;
 import com.thebubblenetwork.api.global.data.InvalidBaseException;
@@ -379,6 +380,9 @@ public class BubbleListener implements Listener, PacketListener {
             } else {
                 getBungee().logSevere("Could not find servertype for request");
             }
+        } else if(message instanceof AntiCheatViolationMessage){
+            AntiCheatViolationMessage antiCheatViolationMessage = (AntiCheatViolationMessage)message;
+
         } else {
             getBungee().logSevere("Could not accept packet - " + message.getType().getName());
         }

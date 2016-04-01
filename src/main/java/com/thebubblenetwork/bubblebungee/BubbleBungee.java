@@ -273,7 +273,7 @@ public class BubbleBungee extends BubbleHub<Plugin> {
         Rank.getRanks().clear();
         if(!SQLUtil.tableExists(getConnection(),"ranks")){
             getLogger().log(Level.INFO,"Rank table does not exist, creating...");
-            getConnection().executeSQL("" +
+            getConnection().executeSQL(
                     "CREATE TABLE `ranks` (" +
                     "`rank` VARCHAR(32) NOT NULL DEFAULT 'default'," +
                     "`value` TEXT NOT NULL," +
@@ -306,12 +306,12 @@ public class BubbleBungee extends BubbleHub<Plugin> {
 
             //create the playerdata table
             getLogger().log(Level.INFO, "PlayerData table does not exist, creating...");
-            getConnection().executeSQL("" +
+            getConnection().executeSQL(
                     "CREATE TABLE `playerdata` (" +
-                    "'uuid' VARCHAR(255) NOT NULL," +
+                    "`uuid` VARCHAR(36) NOT NULL," +
                     "`value` TEXT NOT NULL," +
                     "`key` TEXT NOT NULL," +
-                    "INDEX `uuid` (`uuid`)" +
+                    "INDEX `UUID KEY` (`uuid`)," +
                     ");");
 
             //log successful creation
