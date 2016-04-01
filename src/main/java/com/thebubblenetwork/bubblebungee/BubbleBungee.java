@@ -308,7 +308,7 @@ public class BubbleBungee extends BubbleHub<Plugin> {
             getLogger().log(Level.INFO, "PlayerData table does not exist, creating...");
             getConnection().executeSQL("" +
                     "CREATE TABLE `playerdata` (" +
-                    "'uuid' VARCHAR(255) NOT NULL," +
+                    "`uuid` VARCHAR(255) NOT NULL," +
                     "`value` TEXT NOT NULL," +
                     "`key` TEXT NOT NULL," +
                     "INDEX `uuid` (`uuid`)" +
