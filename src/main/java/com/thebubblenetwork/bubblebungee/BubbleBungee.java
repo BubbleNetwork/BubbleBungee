@@ -95,6 +95,17 @@ public class BubbleBungee extends BubbleHub<Plugin> {
 
         logInfo("Loaded PlayerData table");
 
+        logInfo("loading Punishments table...");
+
+        try {
+            loadPunishmentsTable();
+        } catch (Exception e) {
+            getLogger().log(Level.WARNING, "Could not load Punishments table", e);
+            endSetup("Failed to load Punishments table...");
+        }
+
+        logInfo("Loaded Punishments table");
+
         logInfo("Setting up components");
 
         manager = new ServerManager(this);
@@ -317,6 +328,27 @@ public class BubbleBungee extends BubbleHub<Plugin> {
             //log successful creation
             getLogger().log(Level.INFO, "PlayerData table created successfully!");
         }
+    }
+
+    public void loadPunishmentsTable() throws SQLException, ClassNotFoundException {
+
+        //check if the punishments table exists
+        if (!SQLUtil.tableExists(getConnection(), "punishments")) {
+
+            //create the punishments table
+            getConnection().executeSQL(
+                    "CREATE TABLE `punishments` (" +
+                    "`uuid` VARCHAR(36) NOT NULL," +
+                    "`value` TEXT NOT NULL," +
+                    "`key` TEXT NOT NULL," +
+                    "INDEX `UUID KEY` (`uuid`)," +
+                    ");");
+
+            //log successful createion
+            getLogger().log(Level.INFO, "Punishments table created successfully!");
+
+        }
+
     }
 
     public XServerPlugin getXPlugin() {
