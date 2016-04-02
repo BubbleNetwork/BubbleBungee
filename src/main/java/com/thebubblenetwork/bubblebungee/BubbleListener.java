@@ -183,8 +183,11 @@ public class BubbleListener implements Listener, PacketListener {
             sample.add(new ServerPing.PlayerInfo(s, s));
         }
         String description = ChatColor.AQUA + "Welcome!";
-        if (connection.getVersion() != 47) {
-            description = ChatColor.DARK_RED + "You need MC 1.8";
+        if (connection.getVersion() != 47 || connection.getVersion() < 107) {
+            description = ChatColor.DARK_RED + "You are not on the correct version";
+            ping.setVersion(new ServerPing.Protocol("BubbleNetwork requires 1.8.X/1.9.X",-1));
+        } else if(!connection.isOnlineMode()) {
+            description = ChatColor.DARK_RED + "";
         } else if (bungee.getPlugin().getProxy().getOnlineCount() > MAXLIMIT) {
             description += ChatColor.RED + "Donate to join when full";
             ping.setVersion(new ServerPing.Protocol("Server Full", -1));
