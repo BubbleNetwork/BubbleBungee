@@ -206,7 +206,7 @@ public class BubbleListener implements Listener, PacketListener {
         if(!e.isCancelled()){
             ProxiedBubblePlayer.getPlayerObjectMap().put(player.getUUID(), player);
         }
-        else e.setCancelReason(ChatColor.BLUE + ChatColor.BOLD.toString() + "[" + ChatColor.AQUA + "BubbleNetwork" + ChatColor.BLUE + ChatColor.BOLD.toString() + "]\n\n");
+        else e.setCancelReason(ChatColor.BLUE + ChatColor.BOLD.toString() + "[" + ChatColor.AQUA + "BubbleNetwork" + ChatColor.BLUE + ChatColor.BOLD.toString() + "]\n\n" + e.getCancelReason());
     }
 
 

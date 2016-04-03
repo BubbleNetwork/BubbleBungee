@@ -194,7 +194,7 @@ public class ServerManager implements Runnable{
         return null;
     }
 
-    class UneededException extends Exception {
+    public static class UneededException extends Exception {
         public UneededException() {
 
         }
