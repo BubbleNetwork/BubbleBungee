@@ -155,8 +155,20 @@ public class BubbleListener implements Listener, PacketListener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerPreJoinEarly(PreLoginEvent e){
         PendingConnection connection = e.getConnection();
+        if(!connection.isOnlineMode()){
+            e.setCancelled(true);
+            e.setCancelReason("You must be online mode");
+        }
+        if(connection.getUniqueId() == null){
+            e.setCancelled(true);
+            e.setCancelReason("UUID cannot be null");
+        }
+        if(connection.getName() == null){
+            e.setCancelled(true);
+            e.setCancelReason("Name cannot be null");
+        }
         if(!e.isCancelled()) {
-            PlayerData data = null;
+            PlayerData data;
             try {
                 data = getBungee().loadData(connection.getUniqueId());
             } catch (Exception e1) {
@@ -166,6 +178,7 @@ public class BubbleListener implements Listener, PacketListener {
                 return;
             }
             ProxiedBubblePlayer player = new ProxiedBubblePlayer(connection.getUniqueId(), data);
+            player.setName(connection.getName());
             if(player.isBanned()){
                 e.setCancelled(true);
                 String bantimer;
