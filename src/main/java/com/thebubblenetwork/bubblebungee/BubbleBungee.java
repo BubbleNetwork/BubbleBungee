@@ -62,6 +62,7 @@ public class BubbleBungee extends BubbleHub<Plugin> {
     private P plugin;
     private BungeePlugman pluginManager;
     private File file;
+    private boolean lockdown = true;
 
     public BubbleBungee(P plugin) {
         super();
@@ -127,6 +128,7 @@ public class BubbleBungee extends BubbleHub<Plugin> {
         registerCommand(new SetTokenCommand());
         registerCommand(new PartyCommand());
         registerCommand(new HelpCommand());
+        registerCommand(new LockdownCommand());
 
         logInfo("Commands have been created");
 
@@ -472,5 +474,13 @@ public class BubbleBungee extends BubbleHub<Plugin> {
             //Nothing we can do
             throw new IllegalArgumentException(e);
         }
+    }
+
+    public boolean isLockdown() {
+        return lockdown;
+    }
+
+    public void setLockdown(boolean lockdown) {
+        this.lockdown = lockdown;
     }
 }

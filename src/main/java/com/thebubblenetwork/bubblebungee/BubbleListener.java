@@ -69,7 +69,7 @@ public class BubbleListener implements Listener, PacketListener {
     private String line1 = ChatColor.AQUA + ChatColor.BOLD.toString() + "BubbleNetwork" + spacer;
     private String line2 = ChatColor.BLUE + " Come and join the fun!";
     private List<String> sample = Arrays.asList(ChatColor.AQUA + ChatColor.UNDERLINE.toString() + "BubbleNetwork", "", ChatColor.BLUE + "Site " + ChatColor.GRAY + ChatColor.ITALIC.toString() + "thebubblenetwork.com");
-    private List<String> requestqueue = new ArrayList<>();
+    private Map<UUID, ProxiedBubblePlayer> prequeed = new HashMap<>();
 
     public BubbleListener(BubbleBungee bungee) {
         this.bungee = bungee;
@@ -152,6 +152,38 @@ public class BubbleListener implements Listener, PacketListener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
+    public void onPlayerPreJoinEarly(PreLoginEvent e){
+        PendingConnection connection = e.getConnection();
+        if(!e.isCancelled()) {
+            PlayerData data = null;
+            try {
+                data = getBungee().loadData(connection.getUniqueId());
+            } catch (Exception e1) {
+                e.setCancelled(true);
+                e.setCancelReason(ChatColor.RED + "Woops! " + e1.getClass().getName() + ": " + e1.getMessage());
+                getBungee().getLogger().log(Level.WARNING, "Failed to load PlayerData: " + connection.getName());
+            }
+            ProxiedBubblePlayer player = new ProxiedBubblePlayer(connection.getUniqueId(), data);
+            if (getBungee().isLockdown() && !player.isAuthorized("lockdown.bypass")) {
+                e.setCancelled(true);
+                e.setCancelReason(ChatColor.RED + "Server is currently locked down");
+            }
+            if(!e.isCancelled()) {
+                prequeed.put(connection.getUniqueId(), player);
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerPreJoinLate(PreLoginEvent e){
+        ProxiedBubblePlayer player = prequeed.remove(e.getConnection().getUniqueId());
+        if(!e.isCancelled()){
+            ProxiedBubblePlayer.getPlayerObjectMap().put(player.getUUID(), player);
+        }
+    }
+
+
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerJoin(PostLoginEvent e) {
         ProxiedPlayer connection = e.getPlayer();
         try {
@@ -210,27 +242,9 @@ public class BubbleListener implements Listener, PacketListener {
             if (player.getServer() != null) {
                 BubbleServer from = getBungee().getManager().getServer(player.getServer().getInfo().getName());
                 if (from != null) {
-                    getBungee().logInfo("Requesting playerdata for " + player.getName());
-                    sendPacketSafe(from.getServer(), new PlayerDataRequest(player.getName()));
-                    String name = player.getName().toLowerCase();
-                    requestqueue.add(name);
-                    long max = TimeUnit.SECONDS.toMillis(10);
-                    long original = System.currentTimeMillis();
-                    while (requestqueue.contains(name)) {
-                        try {
-                            Thread.sleep(100L);
-                        } catch (InterruptedException e1) {
-                        }
-                        if (System.currentTimeMillis() > original + max) {
-                            getBungee().logSevere("Server timed out? " + server.getName());
-                            e.setCancelled(true);
-                            return;
-                        }
-                    }
-                    getBungee().logInfo("Server change authorized for " + player.getName());
                 }
             } else {
-                //LOGIN ?
+                //Player login
                 ServerType LOBBY = ServerType.getType("Lobby");
                 if (LOBBY == null) {
                     throw new IllegalArgumentException("Lobby type doesn't exist");
@@ -289,7 +303,6 @@ public class BubbleListener implements Listener, PacketListener {
             } else {
                 getBungee().logSevere("Received response without player on bungee " + response.getName() + " (" + info.getServer().getName() + ")");
             }
-            requestqueue.remove(response.getName().toLowerCase());
         } else if (message instanceof ServerShutdownRequest) {
             BubbleServer server = getBungee().getManager().getServer(info.getServer());
             if (server != null) {
