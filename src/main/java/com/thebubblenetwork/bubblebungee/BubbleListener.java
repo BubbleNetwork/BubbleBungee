@@ -163,6 +163,7 @@ public class BubbleListener implements Listener, PacketListener {
                 e.setCancelled(true);
                 e.setCancelReason(ChatColor.RED + "Woops! " + e1.getClass().getName() + ": " + e1.getMessage());
                 getBungee().getLogger().log(Level.WARNING, "Failed to load PlayerData: " + connection.getName());
+                return;
             }
             ProxiedBubblePlayer player = new ProxiedBubblePlayer(connection.getUniqueId(), data);
             if(player.isBanned()){
