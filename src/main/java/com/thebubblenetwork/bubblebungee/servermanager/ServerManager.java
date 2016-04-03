@@ -22,8 +22,8 @@ import java.util.logging.Level;
 public class ServerManager implements Runnable{
     private BubbleBungee bungee;
 
-    private Set<BubbleServer> servers = new ConcurrentSet<>();
-    private Set<PacketInfo> unassigned = new ConcurrentSet<>();
+    private List<BubbleServer> servers = Collections.synchronizedList(new ArrayList<BubbleServer>());
+    private Set<PacketInfo> unassigned = Collections.synchronizedSet(new HashSet<PacketInfo>());
 
     public ServerManager(BubbleBungee bungee) {
         this.bungee = bungee;
@@ -73,7 +73,7 @@ public class ServerManager implements Runnable{
         return unassigned;
     }
 
-    public Set<BubbleServer> getServers() {
+    public List<BubbleServer> getServers() {
         return servers;
     }
 
