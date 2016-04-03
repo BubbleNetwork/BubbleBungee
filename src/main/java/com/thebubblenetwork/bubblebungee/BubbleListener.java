@@ -37,7 +37,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * The Bubble Network 2016
@@ -46,6 +45,8 @@ import java.util.logging.Logger;
  * Created January 2016
  */
 public class BubbleListener implements Listener, PacketListener {
+    public static final String BANMSG = ChatColor.RED + "You have been {0} from BubbleNetwork\n\nReason: " + ChatColor.WHITE + "{1}\n" + ChatColor.RED + "Expires: " + ChatColor.WHITE + "{2}\n" + ChatColor.RED + "{0} By: " + ChatColor.WHITE + "{3}\n\n" + ChatColor.RED + "You may appeal at thebubblenetwork.com";
+
     private static final String spacer = "\n";
     private static final int MAXLIMIT = 5000;
 
@@ -164,11 +165,36 @@ public class BubbleListener implements Listener, PacketListener {
                 getBungee().getLogger().log(Level.WARNING, "Failed to load PlayerData: " + connection.getName());
             }
             ProxiedBubblePlayer player = new ProxiedBubblePlayer(connection.getUniqueId(), data);
-            if (getBungee().isLockdown() && !player.isAuthorized("lockdown.bypass")) {
+            if(player.isBanned()){
                 e.setCancelled(true);
-                e.setCancelReason(ChatColor.RED + "Server is currently locked down");
+                String bantimer;
+                if(player.getUnbanDate() != null) {
+                    bantimer = "";
+                    Date unbanby = new Date(player.getUnbanDate().getTime() - System.currentTimeMillis());
+                    if(unbanby.getYear() != 0){
+                        bantimer += unbanby.getYear() + " " + "year" + (unbanby.getYear() != 1 ? "s" : "") + " ";
+                    }
+                    if(unbanby.getMonth() != 0){
+                        bantimer += unbanby.getMonth() + " " + "month" + (unbanby.getMonth() != 1 ? "s" : "") + " ";
+                    }
+                    if(unbanby.getYear() != 0){
+                        bantimer += unbanby.getDay() + " " + "day" + (unbanby.getDay() != 1 ? "s" : "") + " ";
+                    }
+                    if(unbanby.getMinutes() != 0){
+                        bantimer += unbanby.getYear() + " " + "minute" + (unbanby.getMinutes() != 1 ? "s" : "") + " ";
+                    }
+                    if(unbanby.getYear() != 0){
+                        bantimer += unbanby.getSeconds() + " " + "second" + (unbanby.getSeconds() != 1 ? "s" : "") + " ";
+                    }
+                }
+                else bantimer = "never";
+                e.setCancelReason(String.format(BANMSG,new String[]{"Banned",player.getBanReason(),bantimer,player.getBannedBy()}));
             }
-            if(!e.isCancelled()) {
+            else if (getBungee().isLockdown() && !player.isAuthorized("lockdown.bypass")) {
+                e.setCancelled(true);
+                e.setCancelReason(getBungee().getLockdownmsg());
+            }
+            else if(!e.isCancelled()) {
                 prequeed.put(connection.getUniqueId(), player);
             }
         }
@@ -180,6 +206,7 @@ public class BubbleListener implements Listener, PacketListener {
         if(!e.isCancelled()){
             ProxiedBubblePlayer.getPlayerObjectMap().put(player.getUUID(), player);
         }
+        else e.setCancelReason(ChatColor.BLUE + ChatColor.BOLD.toString() + "[" + ChatColor.AQUA + "BubbleNetwork" + ChatColor.BLUE + ChatColor.BOLD.toString() + "]\n\n");
     }
 
 

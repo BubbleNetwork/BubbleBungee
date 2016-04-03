@@ -17,6 +17,7 @@ import com.thebubblenetwork.bubblebungee.player.ProxiedBubblePlayer;
 import com.thebubblenetwork.bubblebungee.servermanager.BubbleServer;
 import com.thebubblenetwork.bubblebungee.servermanager.ServerManager;
 import de.mickare.xserver.XServerPlugin;
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -63,6 +64,7 @@ public class BubbleBungee extends BubbleHub<Plugin> {
     private BungeePlugman pluginManager;
     private File file;
     private boolean lockdown = true;
+    private String lockdownmsg = ChatColor.RED + "The server is currently locked down";
 
     public BubbleBungee(P plugin) {
         super();
@@ -482,5 +484,13 @@ public class BubbleBungee extends BubbleHub<Plugin> {
 
     public void setLockdown(boolean lockdown) {
         this.lockdown = lockdown;
+    }
+
+    public String getLockdownmsg() {
+        return lockdownmsg;
+    }
+
+    public void setLockdownmsg(String lockdownmsg) {
+        this.lockdownmsg = lockdownmsg;
     }
 }
