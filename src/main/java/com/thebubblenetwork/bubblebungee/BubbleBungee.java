@@ -131,6 +131,7 @@ public class BubbleBungee extends BubbleHub<Plugin> {
         registerCommand(new PartyCommand());
         registerCommand(new HelpCommand());
         registerCommand(new LockdownCommand());
+        registerCommand(new RegisterCommand());
 
         logInfo("Commands have been created");
 
