@@ -155,19 +155,11 @@ public class BubbleListener implements Listener, PacketListener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerPreJoinEarly(PreLoginEvent e){
         PendingConnection connection = e.getConnection();
-        if(!connection.isOnlineMode()){
+        if(!connection.isOnlineMode()) {
             e.setCancelled(true);
-            e.setCancelReason("You must be online mode");
+            e.setCancelReason("Your account is not authenticated");
         }
-        if(connection.getUniqueId() == null){
-            e.setCancelled(true);
-            e.setCancelReason("UUID cannot be null");
-        }
-        if(connection.getName() == null){
-            e.setCancelled(true);
-            e.setCancelReason("Name cannot be null");
-        }
-        if(!e.isCancelled()) {
+        else if(!e.isCancelled()) {
             PlayerData data;
             try {
                 data = getBungee().loadData(connection.getUniqueId());
@@ -202,7 +194,7 @@ public class BubbleListener implements Listener, PacketListener {
                     }
                 }
                 else bantimer = "never";
-                e.setCancelReason(String.format(BANMSG,new String[]{"Banned",player.getBanReason(),bantimer,player.getBannedBy()}));
+                e.setCancelReason(String.format(BANMSG,"Banned",player.getBanReason(),bantimer,player.getBannedBy()));
             }
             else if (getBungee().isLockdown() && !player.isAuthorized("lockdown.bypass")) {
                 e.setCancelled(true);
@@ -256,9 +248,9 @@ public class BubbleListener implements Listener, PacketListener {
             sample.add(new ServerPing.PlayerInfo(s, s));
         }
         String description = ChatColor.AQUA + "Welcome!";
-        if (connection.getVersion() != 47 || connection.getVersion() < 107) {
+        if (connection.getVersion() != 47 && connection.getVersion() < 107) {
             description = ChatColor.DARK_RED + "You are not on the correct version";
-            ping.setVersion(new ServerPing.Protocol("BubbleNetwork requires 1.8.X/1.9.X",-1));
+            ping.setVersion(new ServerPing.Protocol("Bubble 1.8.X/1.9.X",-1));
         } else if(!connection.isOnlineMode()) {
             description = ChatColor.DARK_RED + "";
         } else if (bungee.getPlugin().getProxy().getOnlineCount() > MAXLIMIT) {
