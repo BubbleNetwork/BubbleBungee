@@ -69,7 +69,7 @@ public class BubbleListener implements Listener, PacketListener {
     private BubbleBungee bungee;
     private String line1 = ChatColor.AQUA + ChatColor.BOLD.toString() + "BubbleNetwork" + spacer;
     private String line2 = ChatColor.BLUE + " Come and join the fun!";
-    private List<String> sample = Arrays.asList(ChatColor.AQUA + ChatColor.UNDERLINE.toString() + "BubbleNetwork", "", ChatColor.BLUE + "Site " + ChatColor.GRAY + ChatColor.ITALIC.toString() + "thebubblenetwork.com");
+    private List<String> sample = Arrays.asList(ChatColor.AQUA + ChatColor.UNDERLINE.toString() + "BubbleNetwork", "", ChatColor.BLUE + "Site " + ChatColor.GRAY + ChatColor.ITALIC.toString() + "thebubblenetwork.com",ChatColor.BLUE + "TeamSpeak " + ChatColor.GRAY + ChatColor.ITALIC.toString() + "ts.thebubblenetwork.com","",ChatColor.BLUE + "Follow us on twitter " + ChatColor.GRAY + "@bubblenetworkmc");
     private Map<UUID, ProxiedBubblePlayer> prequeed = new HashMap<>();
 
     public BubbleListener(BubbleBungee bungee) {
