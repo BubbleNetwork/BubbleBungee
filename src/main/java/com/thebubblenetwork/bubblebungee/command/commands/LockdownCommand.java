@@ -37,7 +37,7 @@ public class LockdownCommand extends BaseCommand{
                 .add(new SubCommand("setmessage","lockdown.message","setmessage <message>","setmsg","msg","message") {
                     public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {
                         if(args.length < 1)throw invalidUsage();
-                        String message = Joiner.on(" ").join(args);
+                        String message = ChatColor.translateAlternateColorCodes('&',Joiner.on(" ").join(args));
                         instance.setLockdownmsg(message);
                         return TextComponent.fromLegacyText(ChatColor.GREEN + "Lockdown message set to \'" + message + ChatColor.GREEN + "\'");
                     }
