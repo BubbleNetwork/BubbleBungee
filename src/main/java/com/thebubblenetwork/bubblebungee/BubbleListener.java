@@ -153,11 +153,15 @@ public class BubbleListener implements Listener, PacketListener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onPlayerPreJoinEarly(PreLoginEvent e){
+    public void onPlayerPreJoinEarly(LoginEvent e){
         PendingConnection connection = e.getConnection();
         if(!connection.isOnlineMode()) {
             e.setCancelled(true);
             e.setCancelReason("Your account is not authenticated");
+        }
+        else if(connection.getUniqueId() == null || connection.getName() == null){
+            e.setCancelled(true);
+            e.setCancelReason("Error in authentication");
         }
         else if(!e.isCancelled()) {
             PlayerData data;
@@ -207,12 +211,12 @@ public class BubbleListener implements Listener, PacketListener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerPreJoinLate(PreLoginEvent e){
+    public void onPlayerPreJoinLate(LoginEvent e){
         ProxiedBubblePlayer player = prequeed.remove(e.getConnection().getUniqueId());
         if(!e.isCancelled()){
             ProxiedBubblePlayer.getPlayerObjectMap().put(player.getUUID(), player);
         }
-        else e.setCancelReason(ChatColor.BLUE + ChatColor.BOLD.toString() + "[" + ChatColor.AQUA + "BubbleNetwork" + ChatColor.BLUE + ChatColor.BOLD.toString() + "]\n\n" + e.getCancelReason());
+        else e.setCancelReason(ChatColor.BLUE + ChatColor.BOLD.toString() + "[" + ChatColor.AQUA + "BubbleNetwork" + ChatColor.BLUE + ChatColor.BOLD.toString() + "]\n\n" + ChatColor.RESET + e.getCancelReason());
     }
 
 
