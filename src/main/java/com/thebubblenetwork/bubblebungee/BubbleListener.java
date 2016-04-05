@@ -232,6 +232,12 @@ public class BubbleListener implements Listener, PacketListener {
         } catch (SQLException | ClassNotFoundException e1) {
             getBungee().logSevere(e1.getMessage());
         }
+        BubbleServer lobby = getLobby(connection);
+        if(lobby != null){
+            connection.setReconnectServer(lobby.getInfo());
+            connection.connect(lobby.getInfo());
+        }
+        else connection.disconnect(TextComponent.fromLegacyText(ChatColor.RED + "No lobbies!"));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -289,6 +295,22 @@ public class BubbleListener implements Listener, PacketListener {
         }
     }
 
+
+    @EventHandler
+    public void onServerKick(ServerKickEvent e){
+        BubbleServer lobbyServer = getLobby(e.getPlayer());
+        if(lobbyServer != null) {
+            e.setCancelServer(lobbyServer.getInfo());
+            e.setState(ServerKickEvent.State.CONNECTING);
+            e.getPlayer().setReconnectServer(lobbyServer.getInfo());
+            e.getPlayer().connect(lobbyServer.getInfo());
+        }
+        else{
+            e.setState(ServerKickEvent.State.UNKNOWN);
+            e.setKickReasonComponent(TextComponent.fromLegacyText(ChatColor.RED + "No available lobbies!"));
+        }
+    }
+
     public BubbleServer getLobby(ProxiedPlayer player){
         //Player login
         ServerType LOBBY = ServerType.getType("Lobby");
@@ -299,7 +321,6 @@ public class BubbleListener implements Listener, PacketListener {
         if (server == null) {
             server = getBungee().getManager().getAvailble(LOBBY,1, true, false);
         }
-        player.setReconnectServer(server.getInfo());
         return server;
     }
 
