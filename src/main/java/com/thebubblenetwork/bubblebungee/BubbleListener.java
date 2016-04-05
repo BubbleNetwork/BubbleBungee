@@ -274,35 +274,36 @@ public class BubbleListener implements Listener, PacketListener {
     public void onPreServerChange(ServerConnectEvent e) {
         ProxiedPlayer player = e.getPlayer();
         BubbleServer server = getBungee().getManager().getServer(e.getTarget().getName());
-        if (e.getTarget().getName().equals("FakeServer") || server == null || player.getServer() == null) {
-            server = getLobby(player);
-            if(server == null){
-                player.disconnect(TextComponent.fromLegacyText(ChatColor.RED + "No available lobbies!"));
-                e.setCancelled(true);
-            }
-            else{
+        if (server != null) {
+            e.setTarget(server.getInfo());
+            if (player.getServer() != null) {
+                BubbleServer from = getBungee().getManager().getServer(player.getServer().getInfo().getName());
+                if (from != null) {
+                }
+            } else {
+                //Player login
+                ServerType LOBBY = ServerType.getType("Lobby");
+                if (LOBBY == null) {
+                    throw new IllegalArgumentException("Lobby type doesn't exist");
+                }
+                server = getBungee().getManager().getAvailble(LOBBY,1, true, true);
+                if (server == null) {
+                    server = getBungee().getManager().getAvailble(LOBBY,1, true, false);
+                    if (server == null) {
+                        e.setCancelled(true);
+                        e.getPlayer().disconnect(TextComponent.fromLegacyText(ChatColor.RED + "No lobbies open at the moment"));
+                        return;
+                    }
+                }
+                player.setReconnectServer(server.getInfo());
                 e.setTarget(server.getInfo());
             }
-        }
-        else{
-            e.setTarget(server.getInfo());
+        } else {
+            getBungee().logSevere(player.getName() + " tried to connect to an unregistered server");
+            e.setCancelled(true);
+            player.sendMessage(TextComponent.fromLegacyText(errormsg));
         }
     }
-
-    public BubbleServer getLobby(ProxiedPlayer player){
-        //Player login
-        ServerType LOBBY = ServerType.getType("Lobby");
-        if (LOBBY == null) {
-            throw new IllegalArgumentException("Lobby type doesn't exist");
-        }
-        BubbleServer server = getBungee().getManager().getAvailble(LOBBY,1, true, true);
-        if (server == null) {
-            server = getBungee().getManager().getAvailble(LOBBY,1, true, false);
-        }
-        player.setReconnectServer(server.getInfo());
-        return server;
-    }
-
 
     public void onMessage(PacketInfo info, IPluginMessage message) {
         if (message instanceof PlayerDataRequest) {
