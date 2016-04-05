@@ -23,6 +23,7 @@ import com.thebubblenetwork.bubblebungee.servermanager.BubbleServer;
 import de.mickare.xserver.net.XServer;
 import net.md_5.bungee.api.*;
 import net.md_5.bungee.api.chat.*;
+import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.*;
@@ -44,7 +45,7 @@ import java.util.logging.Level;
  * 24/01/2016 {09:46}
  * Created January 2016
  */
-public class BubbleListener implements Listener, PacketListener {
+public class BubbleListener implements Listener, PacketListener, ReconnectHandler {
     public static final String BANMSG = ChatColor.RED + "You have been {0} from BubbleNetwork\n\nReason: " + ChatColor.WHITE + "{1}\n" + ChatColor.RED + "Expires: " + ChatColor.WHITE + "{2}\n" + ChatColor.RED + "{0} By: " + ChatColor.WHITE + "{3}\n\n" + ChatColor.RED + "You may appeal at thebubblenetwork.com";
 
     private static final String spacer = "\n";
@@ -232,12 +233,6 @@ public class BubbleListener implements Listener, PacketListener {
         } catch (SQLException | ClassNotFoundException e1) {
             getBungee().logSevere(e1.getMessage());
         }
-        BubbleServer lobby = getLobby(connection);
-        if(lobby != null){
-            connection.setReconnectServer(lobby.getInfo());
-            connection.connect(lobby.getInfo());
-        }
-        else connection.disconnect(TextComponent.fromLegacyText(ChatColor.RED + "No lobbies!"));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -278,21 +273,11 @@ public class BubbleListener implements Listener, PacketListener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPreServerChange(ServerConnectEvent e) {
-        ProxiedPlayer player = e.getPlayer();
         BubbleServer server = getBungee().getManager().getServer(e.getTarget().getName());
-        if (e.getTarget().getName().equals("FakeServer") || server == null || player.getServer() == null) {
-            server = getLobby(player);
-            if(server == null){
-                player.disconnect(TextComponent.fromLegacyText(ChatColor.RED + "No available lobbies!"));
-                e.setCancelled(true);
-            }
-            else{
-                e.setTarget(server.getInfo());
-            }
-        }
-        else{
+        if(server != null){
             e.setTarget(server.getInfo());
         }
+        else e.setCancelled(true);
     }
 
 
@@ -301,13 +286,6 @@ public class BubbleListener implements Listener, PacketListener {
         BubbleServer lobbyServer = getLobby(e.getPlayer());
         if(lobbyServer != null) {
             e.setCancelServer(lobbyServer.getInfo());
-            e.setState(ServerKickEvent.State.CONNECTING);
-            e.getPlayer().setReconnectServer(lobbyServer.getInfo());
-            e.getPlayer().connect(lobbyServer.getInfo());
-        }
-        else{
-            e.setState(ServerKickEvent.State.UNKNOWN);
-            e.setKickReasonComponent(TextComponent.fromLegacyText(ChatColor.RED + "No available lobbies!"));
         }
     }
 
@@ -499,5 +477,25 @@ public class BubbleListener implements Listener, PacketListener {
         };
         toExecute.put(u, r);
         ProxyServer.getInstance().getScheduler().schedule(getBungee().getPlugin(), r, 1L, TimeUnit.MILLISECONDS);
+    }
+
+    public ServerInfo getServer(ProxiedPlayer proxiedPlayer) {
+        BubbleServer server = getLobby(proxiedPlayer);
+        if(server != null){
+            return server.getInfo();
+        }
+        return null;
+    }
+
+    public void setServer(ProxiedPlayer proxiedPlayer) {
+
+    }
+
+    public void save() {
+
+    }
+
+    public void close() {
+
     }
 }

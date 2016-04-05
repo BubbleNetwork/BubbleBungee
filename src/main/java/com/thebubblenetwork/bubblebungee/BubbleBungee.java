@@ -6,6 +6,7 @@ import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response
 import com.thebubblenetwork.api.global.data.DataObject;
 import com.thebubblenetwork.api.global.data.PlayerData;
 import com.thebubblenetwork.api.global.data.RankData;
+import com.thebubblenetwork.api.global.file.PropertiesFile;
 import com.thebubblenetwork.api.global.player.BubblePlayer;
 import com.thebubblenetwork.api.global.plugin.BubbleHub;
 import com.thebubblenetwork.api.global.ranks.Rank;
@@ -19,6 +20,9 @@ import com.thebubblenetwork.bubblebungee.servermanager.ServerManager;
 import de.mickare.xserver.XServerPlugin;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.ReconnectHandler;
+import net.md_5.bungee.api.config.ConfigurationAdapter;
+import net.md_5.bungee.api.config.ListenerInfo;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
@@ -28,12 +32,11 @@ import net.md_5.bungee.config.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,7 +48,7 @@ import java.util.logging.Logger;
  * Created January 2016
  */
 
-public class BubbleBungee extends BubbleHub<Plugin> {
+public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdapter{
 
     private static final int VERSION = 12;
 
@@ -65,6 +68,7 @@ public class BubbleBungee extends BubbleHub<Plugin> {
     private File file;
     private boolean lockdown = true;
     private String lockdownmsg = ChatColor.RED + "The server is currently locked down";
+    private PropertiesFile bungeeeproperties;
 
     public BubbleBungee(P plugin) {
         super();
@@ -113,6 +117,7 @@ public class BubbleBungee extends BubbleHub<Plugin> {
 
         manager = new ServerManager(this);
         listener = new BubbleListener(this);
+        getPlugin().getProxy().setReconnectHandler(listener);
         getPacketHub().registerListener(listener);
         getPlugin().getProxy().getPluginManager().registerListener(getPlugin(), listener);
 
@@ -229,6 +234,7 @@ public class BubbleBungee extends BubbleHub<Plugin> {
 
     public void onBubbleLoad() {
         pluginManager = new BungeePlugman(getPlugin().getProxy());
+        getPlugin().getProxy().setConfigurationAdapter(this);
     }
 
     public ProxiedPlayer getPlayer(UUID uuid) {
@@ -493,5 +499,96 @@ public class BubbleBungee extends BubbleHub<Plugin> {
 
     public void setLockdownmsg(String lockdownmsg) {
         this.lockdownmsg = lockdownmsg;
+    }
+
+    @Override
+    public void load() {
+        File config = new File("config.properties");
+        if(!config.exists()){
+            try {
+                PropertiesFile.generateFresh(config, new String[]{"ip","port","bind","max_players","tab_size","ping_passthrough","query_enabled"},new String[]{"localhost","25565","true","1000","60","false","true"});
+            } catch (Exception e) {
+                throw new IllegalArgumentException(e);
+            }
+        }
+        try {
+            bungeeeproperties = new PropertiesFile(config);
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    @Override
+    public int getInt(String s, int i) {
+        switch (s){
+            case "network_compression_threshold":
+                return 256;
+            case "player_limit":
+                return -1;
+            case "connection_throttle":
+                return 4000;
+            case "timeout":
+                return 8000;
+        }
+        throw new IllegalArgumentException("Could not find \'" + s + "\'");
+    }
+
+    @Override
+    public String getString(String s, String s1) {
+        switch (s){
+            case "stats":
+                return UUID.randomUUID().toString();
+        }
+        throw new IllegalArgumentException("Could not find \'" + s + "\'");
+    }
+
+    @Override
+    public boolean getBoolean(String s, boolean b) {
+        switch (s){
+            case "log_commands":
+            case "ip_forward":
+                return false;
+            case "online_mode":
+                return true;
+        }
+        throw new IllegalArgumentException("Could not find \'" + s + "\'");
+    }
+
+    @Override
+    public Collection<?> getList(String s, Collection<?> collection) {
+        return new ArrayList<>();
+    }
+
+    @Override
+    public Map<String, ServerInfo> getServers() {
+        return new HashMap<>();
+    }
+
+    @Override
+    public Collection<ListenerInfo> getListeners() {
+        try {
+            String ip = bungeeeproperties.getString("ip");
+            int port = bungeeeproperties.getNumber("port").intValue();
+            boolean bind = bungeeeproperties.getString("bind").equalsIgnoreCase("true");
+            int maxplayers = bungeeeproperties.getNumber("max_players").intValue();
+            int tabsize = bungeeeproperties.getNumber("tab_size").intValue();
+            boolean pingpass = bungeeeproperties.getString("ping_passthrough").equalsIgnoreCase("true");
+            boolean query = bungeeeproperties.getString("query_enabled").equalsIgnoreCase("true");
+            ListenerInfo info = new ListenerInfo(new InetSocketAddress(ip, port), ChatColor.BLUE + "BubbleNetwork", maxplayers, tabsize, new ArrayList<String>(), false, new HashMap<String, String>(), "GLOBAL", bind, pingpass, port, query);
+            return Collections.singletonList(info);
+        }
+        catch (Exception ex){
+            throw new IllegalArgumentException("Failed to get objects",ex);
+        }
+    }
+
+    @Override
+    public Collection<String> getGroups(String s) {
+        return new ArrayList<>();
+    }
+
+    @Override
+    public Collection<String> getPermissions(String s) {
+        return new ArrayList<>();
     }
 }
