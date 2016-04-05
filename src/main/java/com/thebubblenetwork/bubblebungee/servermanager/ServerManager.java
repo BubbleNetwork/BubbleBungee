@@ -5,6 +5,8 @@ import com.thebubblenetwork.api.global.type.ServerType;
 import com.thebubblenetwork.bubblebungee.BubbleBungee;
 import de.mickare.xserver.net.XServer;
 import io.netty.util.internal.ConcurrentSet;
+import net.md_5.bungee.api.Callback;
+import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.config.ServerInfo;
 
 import java.net.InetSocketAddress;
@@ -32,10 +34,14 @@ public class ServerManager implements Runnable{
 
     public void run(){
         Iterator<BubbleServer> iterator = getServers().iterator();
-        BubbleServer current;
         while(iterator.hasNext()){
-            current = iterator.next();
+            final BubbleServer current = iterator.next();
             if(!current.getServer().isConnected())iterator.remove();
+            current.getInfo().ping(new Callback<ServerPing>() {
+                public void done(ServerPing serverPing, Throwable throwable) {
+                    if(serverPing == null)getBungee().getLogger().log(Level.SEVERE, current.getName() + " could not ping", throwable);
+                }
+            });
         }
     }
 
@@ -96,7 +102,7 @@ public class ServerManager implements Runnable{
 
     public BubbleServer create(XServer server, ServerType wrapper, int id) {
         removeUnassigned(server);
-        InetSocketAddress address = new InetSocketAddress(server.getHost(), Integer.parseInt(server.getName()) + 10000);
+        InetSocketAddress address = new InetSocketAddress(getBungee().getBungeeeproperties().getString("ip"), server.getPort() + 10000);
         return BubbleServer.create(server, address, wrapper, id);
     }
 

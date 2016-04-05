@@ -63,7 +63,7 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
 
     private static BubbleBungee instance;
     private ServerManager manager;
-    private BubbleListener listener;
+    private BubbleListener listener = new BubbleListener(this);
     private P plugin;
     private BungeePlugman pluginManager;
     private File file;
@@ -117,8 +117,6 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
         logInfo("Setting up components");
 
         manager = new ServerManager(this);
-        listener = new BubbleListener(this);
-        getPlugin().getProxy().setReconnectHandler(listener);
         getPacketHub().registerListener(listener);
         getPlugin().getProxy().getPluginManager().registerListener(getPlugin(), listener);
 
@@ -142,6 +140,8 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
         logInfo("Commands have been created");
 
         logInfo("Finished setup");
+
+        getPlugin().getProxy().getServers().remove("FakeServer");
     }
 
     public void registerCommand(ICommand command) {
@@ -236,6 +236,7 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
     public void onBubbleLoad() {
         pluginManager = new BungeePlugman(getPlugin().getProxy());
         getPlugin().getProxy().setConfigurationAdapter(this);
+        getPlugin().getProxy().setReconnectHandler(listener);
     }
 
     public ProxiedPlayer getPlayer(UUID uuid) {
@@ -502,7 +503,6 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
         this.lockdownmsg = lockdownmsg;
     }
 
-    @Override
     public void load() {
         File config = new File("config.properties");
         if(!config.exists()){
@@ -519,7 +519,6 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
         }
     }
 
-    @Override
     public int getInt(String s, int i) {
         switch (s){
             case "network_compression_threshold":
@@ -534,38 +533,33 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
         throw new IllegalArgumentException("Could not find \'" + s + "\'");
     }
 
-    @Override
     public String getString(String s, String s1) {
         switch (s){
             case "stats":
-                return UUID.randomUUID().toString();
+                return "a4fdab31-7c74-456a-b5fa-8b3f908ae0f9";
         }
         throw new IllegalArgumentException("Could not find \'" + s + "\'");
     }
 
-    @Override
     public boolean getBoolean(String s, boolean b) {
         switch (s){
             case "log_commands":
-            case "ip_forward":
                 return false;
             case "online_mode":
+            case "ip_forward":
                 return true;
         }
         throw new IllegalArgumentException("Could not find \'" + s + "\'");
     }
 
-    @Override
     public Collection<?> getList(String s, Collection<?> collection) {
         return new ArrayList<>();
     }
 
-    @Override
     public Map<String, ServerInfo> getServers() {
         return new ImmutableMap.Builder<String, ServerInfo>().put("FakeServer", getPlugin().getProxy().constructServerInfo("FakeServer", new InetSocketAddress("localhost",30000),"FakeServer",true)).build();
     }
 
-    @Override
     public Collection<ListenerInfo> getListeners() {
         try {
             String ip = bungeeeproperties.getString("ip");
@@ -583,13 +577,15 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
         }
     }
 
-    @Override
     public Collection<String> getGroups(String s) {
         return new ArrayList<>();
     }
 
-    @Override
     public Collection<String> getPermissions(String s) {
         return new ArrayList<>();
+    }
+
+    public PropertiesFile getBungeeeproperties() {
+        return bungeeeproperties;
     }
 }

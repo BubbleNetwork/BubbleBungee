@@ -32,6 +32,7 @@ import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -218,21 +219,6 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
             ProxiedBubblePlayer.getPlayerObjectMap().put(player.getUUID(), player);
         }
         else e.setCancelReason(ChatColor.BLUE + ChatColor.BOLD.toString() + "[" + ChatColor.AQUA + "BubbleNetwork" + ChatColor.BLUE + ChatColor.BOLD.toString() + "]\n\n" + ChatColor.RESET + e.getCancelReason());
-    }
-
-
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void onPlayerJoin(PostLoginEvent e) {
-        ProxiedPlayer connection = e.getPlayer();
-        try {
-            PlayerData data = getBungee().loadData(connection.getUniqueId());
-            ProxiedBubblePlayer player = new ProxiedBubblePlayer(connection.getUniqueId(), data);
-            player.setName(connection.getName());
-            ProxiedBubblePlayer.getPlayerObjectMap().put(connection.getUniqueId(), player);
-            getBungee().logInfo("Loaded data: " + connection.getName());
-        } catch (SQLException | ClassNotFoundException e1) {
-            getBungee().logSevere(e1.getMessage());
-        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -480,15 +466,18 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
     }
 
     public ServerInfo getServer(ProxiedPlayer proxiedPlayer) {
+        getBungee().getLogger().log(Level.INFO, "Finding a Lobby for " + proxiedPlayer.getName());
         BubbleServer server = getLobby(proxiedPlayer);
         if(server != null){
+            getBungee().getLogger().log(Level.INFO, "Sending {0} to {1}",new Object[]{proxiedPlayer.getName(), server.getName()});
             return server.getInfo();
         }
-        return null;
+
+        proxiedPlayer.disconnect(TextComponent.fromLegacyText(ChatColor.RED + "Could not find a Lobby server for you"));
+        throw new IllegalArgumentException("No Server found");
     }
 
     public void setServer(ProxiedPlayer proxiedPlayer) {
-
     }
 
     public void save() {
