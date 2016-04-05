@@ -1,6 +1,7 @@
 package com.thebubblenetwork.bubblebungee;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshake.RankDataUpdate;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.PlayerDataResponse;
 import com.thebubblenetwork.api.global.data.DataObject;
@@ -561,7 +562,7 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
 
     @Override
     public Map<String, ServerInfo> getServers() {
-        return new HashMap<>();
+        return new ImmutableMap.Builder<String, ServerInfo>().put("FakeServer", getPlugin().getProxy().constructServerInfo("FakeServer", new InetSocketAddress("localhost",30000),"FakeServer",true)).build();
     }
 
     @Override
