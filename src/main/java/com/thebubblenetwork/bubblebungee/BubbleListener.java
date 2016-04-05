@@ -232,21 +232,6 @@ public class BubbleListener implements Listener, PacketListener {
         } catch (SQLException | ClassNotFoundException e1) {
             getBungee().logSevere(e1.getMessage());
         }
-        //Player login
-        ServerType LOBBY = ServerType.getType("Lobby");
-        if (LOBBY == null) {
-            throw new IllegalArgumentException("Lobby type doesn't exist");
-        }
-        BubbleServer server = getBungee().getManager().getAvailble(LOBBY,1, true, true);
-        if (server == null) {
-            server = getBungee().getManager().getAvailble(LOBBY,1, true, false);
-            if (server == null) {
-                connection.disconnect(TextComponent.fromLegacyText(ChatColor.RED + "No lobbies open at the moment"));
-                return;
-            }
-        }
-        connection.setReconnectServer(server.getInfo());
-        connection.connect(server.getInfo());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -295,6 +280,23 @@ public class BubbleListener implements Listener, PacketListener {
                 BubbleServer from = getBungee().getManager().getServer(player.getServer().getInfo().getName());
                 if (from != null) {
                 }
+            } else {
+                //Player login
+                ServerType LOBBY = ServerType.getType("Lobby");
+                if (LOBBY == null) {
+                    throw new IllegalArgumentException("Lobby type doesn't exist");
+                }
+                server = getBungee().getManager().getAvailble(LOBBY,1, true, true);
+                if (server == null) {
+                    server = getBungee().getManager().getAvailble(LOBBY,1, true, false);
+                    if (server == null) {
+                        e.setCancelled(true);
+                        e.getPlayer().disconnect(TextComponent.fromLegacyText(ChatColor.RED + "No lobbies open at the moment"));
+                        return;
+                    }
+                }
+                player.setReconnectServer(server.getInfo());
+                e.setTarget(server.getInfo());
             }
         } else {
             getBungee().logSevere(player.getName() + " tried to connect to an unregistered server");
