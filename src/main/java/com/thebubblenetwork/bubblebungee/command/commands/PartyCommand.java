@@ -184,6 +184,7 @@ public class PartyCommand extends BaseCommand {
                 }
                 ProxiedBubblePlayer bubblePlayer = ProxiedBubblePlayer.getObject(player.getUniqueId());
                 Party p = bubblePlayer.getParty();
+                if(isPartyBoolean(player, p))throw new CommandException("You are already in a party", this);
                 ProxiedBubblePlayer target = ProxiedBubblePlayer.getObject(args[0]);
                 if (target == null) {
                     throw new CommandException("Player not found", this);
