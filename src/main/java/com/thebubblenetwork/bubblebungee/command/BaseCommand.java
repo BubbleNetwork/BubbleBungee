@@ -43,7 +43,6 @@ public class BaseCommand extends Command implements ICommand {
             commandSender.sendMessage(e.getResponse());
         } catch (IllegalArgumentException e) {
             commandSender.sendMessage(new CommandException(e.getMessage(), this).getResponse());
-            ProxyServer.getInstance().getLogger().log(Level.INFO, "An validation error occurred whilst executing", e);
         } catch (Throwable ex) {
             commandSender.sendMessage(TextComponent.fromLegacyText(ChatColor.RED + "An internal " + ex.getClass().getSimpleName() + " has occurred\n" + ChatColor.RED + ex.getMessage()));
             ProxyServer.getInstance().getLogger().log(Level.WARNING, "An error occurred whilst executing " + getClass().getName(), ex);
