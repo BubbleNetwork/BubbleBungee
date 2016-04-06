@@ -33,7 +33,7 @@ public class PartyCommand extends BaseCommand {
     }
 
     public static boolean isPartyBoolean(ProxiedPlayer player, Party p) {
-        return p != null && p.isMember(player) && p.getMembers().size() >= 2 && p.getInvited().size() > 1;
+        return p != null && p.isMember(player) && (p.getMembers().size() >= 2 || p.getInvited().size() > 0);
     }
 
     public static void isParty(ProxiedPlayer player, Party p) {
