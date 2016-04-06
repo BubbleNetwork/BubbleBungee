@@ -36,7 +36,7 @@ public class SetTokenCommand extends SimpleCommand {
                 throw new CommandException("Player not found", this);
             }
             try {
-                online = instance.getDataOffline(u);
+                online = instance.getBubblePlayer(u);
             } catch (Exception e) {
                 throw new CommandException("Player not found", this);
             }
@@ -49,9 +49,6 @@ public class SetTokenCommand extends SimpleCommand {
             throw new CommandException("Invalid number", this);
         }
         online.setTokens(i);
-        if (forcesave) {
-            online.save();
-        }
         BaseComponent[] components = TextComponent.fromLegacyText(ChatColor.GOLD + "Successfully set the tokens of \'" + online.getNickName() + "\' to \'" + String.valueOf(i) + "\'");
         HoverEvent event = new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.RED + "This was " + (!forcesave ? "not" : "") + " force saved"));
         for (BaseComponent c : components) {

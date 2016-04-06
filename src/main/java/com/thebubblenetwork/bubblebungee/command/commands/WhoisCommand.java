@@ -37,7 +37,7 @@ public class WhoisCommand extends SimpleCommand {
                 throw new CommandException("Player not found", this);
             }
             try {
-                online = instance.getDataOffline(u);
+                online = instance.getBubblePlayer(u);
             } catch (Exception e) {
                 throw new CommandException("Player not found", this);
             }

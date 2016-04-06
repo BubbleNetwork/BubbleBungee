@@ -165,7 +165,7 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
     }
 
 
-    protected PlayerData loadData(UUID load) throws SQLException, ClassNotFoundException {
+    private PlayerData loadData(UUID load) throws SQLException, ClassNotFoundException {
         return new PlayerData(DataObject.loadData(SQLUtil.query(getConnection(), PlayerData.table, "*", new SQLUtil.WhereVar("uuid", load))));
     }
 
@@ -414,7 +414,7 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
             return player.getUniqueId();
         }
         for(char c:name.toCharArray()){
-            Preconditions.checkArgument(Character.isAlphabetic(c) || Character.isDigit(c),"Must be Alphanumeric");
+            Preconditions.checkArgument( Character.isSpaceChar(c) || Character.isLetterOrDigit(c) || c == '_',"Must be Alphanumeric");
         }
         //QUERY
         String text = "SELECT `uuid` FROM `" + PlayerData.table + "` WHERE `key`=\"%key%\" AND `value`=\"" + name + "\"";
@@ -468,23 +468,6 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
             }
         }
         return null;
-    }
-
-    public boolean isOnline(UUID u){
-        Preconditions.checkNotNull(u,"UUID cannot be null");
-        //Whether data is stored or not
-        return ProxiedBubblePlayer.getPlayerObjectMap().containsKey(u);
-    }
-
-    public ProxiedBubblePlayer getDataOffline(UUID u){
-        Preconditions.checkNotNull(u,"UUID cannot be null");
-        try {
-            return new ProxiedBubblePlayer(u,loadData(u));
-        } catch (Exception e) {
-            getLogger().log(Level.WARNING,"Could not load the offline playerdata of " + u,e);
-            //Nothing we can do
-            throw new IllegalArgumentException(e);
-        }
     }
 
     public boolean isLockdown() {
@@ -587,5 +570,16 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
 
     public PropertiesFile getBungeeeproperties() {
         return bungeeeproperties;
+    }
+
+    public ProxiedBubblePlayer getBubblePlayer(UUID u) throws SQLException, ClassNotFoundException{
+        //UUID cannot be null
+        Preconditions.checkNotNull(u);
+        //If the player is cached return that
+        if(ProxiedBubblePlayer.getPlayerObjectMap().containsKey(u)){
+            return ProxiedBubblePlayer.getObject(u);
+        }
+        //return a loaded instance
+        return new ProxiedBubblePlayer(u, loadData(u));
     }
 }

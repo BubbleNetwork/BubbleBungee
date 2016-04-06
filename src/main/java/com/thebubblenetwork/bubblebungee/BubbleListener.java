@@ -166,23 +166,22 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
             e.setCancelReason("Error in authentication");
         }
         else if(!e.isCancelled()) {
-            PlayerData data;
+            ProxiedBubblePlayer data;
             try {
-                data = getBungee().loadData(connection.getUniqueId());
+                data = getBungee().getBubblePlayer(connection.getUniqueId());
             } catch (Exception e1) {
                 e.setCancelled(true);
                 e.setCancelReason(ChatColor.RED + "Woops! " + e1.getClass().getName() + ": " + e1.getMessage());
                 getBungee().getLogger().log(Level.WARNING, "Failed to load PlayerData: " + connection.getName());
                 return;
             }
-            ProxiedBubblePlayer player = new ProxiedBubblePlayer(connection.getUniqueId(), data);
-            player.setName(connection.getName());
-            if(player.isBanned()){
+            data.setName(connection.getName());
+            if(data.isBanned()){
                 e.setCancelled(true);
                 String bantimer;
-                if(player.getUnbanDate() != null) {
+                if(data.getUnbanDate() != null) {
                     bantimer = "";
-                    Date unbanby = new Date(player.getUnbanDate().getTime() - System.currentTimeMillis());
+                    Date unbanby = new Date(data.getUnbanDate().getTime() - System.currentTimeMillis());
                     if(unbanby.getYear() != 0){
                         bantimer += unbanby.getYear() + " " + "year" + (unbanby.getYear() != 1 ? "s" : "") + " ";
                     }
@@ -200,14 +199,14 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
                     }
                 }
                 else bantimer = "never";
-                e.setCancelReason(String.format(BANMSG,"Banned",player.getBanReason(),bantimer,player.getBannedBy()));
+                e.setCancelReason(String.format(BANMSG,"Banned",data.getBanReason(),bantimer,data.getBannedBy()));
             }
-            else if (getBungee().isLockdown() && !player.isAuthorized("lockdown.bypass")) {
+            else if (getBungee().isLockdown() && !data.isAuthorized("lockdown.bypass")) {
                 e.setCancelled(true);
                 e.setCancelReason(getBungee().getLockdownmsg());
             }
             else if(!e.isCancelled()) {
-                prequeed.put(connection.getUniqueId(), player);
+                prequeed.put(connection.getUniqueId(), data);
             }
         }
     }
@@ -225,7 +224,7 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
     public void onQuit(PlayerDisconnectEvent e) {
         ProxiedBubblePlayer player = (ProxiedBubblePlayer) ProxiedBubblePlayer.getPlayerObjectMap().remove(e.getPlayer().getUniqueId());
         player.setParty(null);
-        player.save();
+        player.finishChanges();
     }
 
     @EventHandler

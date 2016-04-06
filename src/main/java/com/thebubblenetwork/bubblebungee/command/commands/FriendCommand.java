@@ -191,41 +191,38 @@ public class FriendCommand extends BaseCommand {
                 }
                 List<UUID> playerFriends = newList(bubblePlayer.getFriends());
                 ProxiedBubblePlayer online = ProxiedBubblePlayer.getObject(args[0]);
-                boolean forcesave = false;
                 if (online == null) {
-                    forcesave = true;
+                    //Get the player manually
                     UUID u = instance.getUUID(args[0]);
                     if (u == null) {
                         throw new CommandException("Player not found", this);
                     }
-                    if (u == proxiedPlayer.getUniqueId()) {
-                        throw new CommandException("You are not friends with yourself", this);
-                    }
-                    if (!playerFriends.contains(u)) {
-                        throw new CommandException("You are not friends with this player", this);
-                    }
                     try {
-                        online = instance.getDataOffline(u);
+                        online = instance.getBubblePlayer(u);
                     } catch (Exception e) {
                         throw new CommandException("Player not found", this);
                     }
-                } else {
-                    if (online.getUUID() == proxiedPlayer.getUniqueId()) {
-                        throw new CommandException("You are not friends with yourself", this);
-                    }
-                    if (!playerFriends.contains(online.getUUID())) {
-                        throw new CommandException("You are not friends with this player", this);
-                    }
-                    online.getPlayer().sendMessage(TextComponent.fromLegacyText(ChatColor.GOLD + "You are no longer friends with " + bubblePlayer.getNickName()));
                 }
+
+                //Check whether the target is the sender
+                if (online.getUUID() == proxiedPlayer.getUniqueId()) {
+                    throw new CommandException("You are not friends with yourself", this);
+                }
+                //Check whether the target is contained within the player friend list
+                if (!playerFriends.contains(online.getUUID())) {
+                    throw new CommandException("You are not friends with this player", this);
+                }
+                online.getPlayer().sendMessage(TextComponent.fromLegacyText(ChatColor.GOLD + "You are no longer friends with " + bubblePlayer.getNickName()));
+                //Remove the target from the senders friend list
                 playerFriends.remove(online.getUUID());
+                //Set the players friend list
                 bubblePlayer.setFriends(playerFriends);
+                //Get the friends of the target
                 List<UUID> targetfriends = newList(online.getFriends());
+                //Remove the sender from the targets friend list
                 targetfriends.remove(proxiedPlayer.getUniqueId());
+                //Set the targets friend list
                 online.setFriends(targetfriends);
-                if (forcesave) {
-                    online.save();
-                }
                 return TextComponent.fromLegacyText(ChatColor.GOLD + "You are no longer friends with " + online.getNickName());
             }
         }).build(), "friends");

@@ -8,6 +8,7 @@ import com.thebubblenetwork.bubblebungee.party.Party;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -62,6 +63,10 @@ public class ProxiedBubblePlayer extends BubblePlayer<ProxiedPlayer>{
     private Party party = null;
 
     public ProxiedBubblePlayer(UUID u, PlayerData data) {
+        super(u, data.getRaw());
+    }
+
+    public ProxiedBubblePlayer(UUID u, Map<String, String> data){
         super(u, data);
     }
 
@@ -85,12 +90,16 @@ public class ProxiedBubblePlayer extends BubblePlayer<ProxiedPlayer>{
         getData().set(PlayerData.NAME, name);
     }
 
+    public boolean isOnline(){
+        return getPlayerObjectMap().containsKey(getUUID());
+    }
+
     @Override
-    public void update() {
+    protected void update() {
         BubbleBungee.getInstance().updatePlayer(this);
     }
 
-    public void save() {
+    protected void save() {
         try {
             getData().save(PlayerData.table, "uuid", getUUID());
         } catch (SQLException | ClassNotFoundException e) {

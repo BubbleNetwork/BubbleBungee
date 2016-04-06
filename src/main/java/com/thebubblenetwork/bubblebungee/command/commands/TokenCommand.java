@@ -60,7 +60,7 @@ public class TokenCommand extends SimpleCommand {
                     throw new CommandException("Player not found", this);
                 }
                 try {
-                    target = instance.getDataOffline(u);
+                    target = instance.getBubblePlayer(u);
                 } catch (Exception e) {
                     throw new CommandException("Player not found", this);
                 }

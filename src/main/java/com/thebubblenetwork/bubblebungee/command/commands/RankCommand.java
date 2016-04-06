@@ -202,15 +202,13 @@ public class RankCommand extends BaseCommand {
                 }
                 String playername = args[0];
                 ProxiedBubblePlayer online = ProxiedBubblePlayer.getObject(playername);
-                boolean forcesave = false;
                 if (online == null) {
-                    forcesave = true;
                     UUID u = instance.getUUID(playername);
                     if (u == null) {
                         throw new CommandException("Player not found", this);
                     }
                     try {
-                        online = instance.getDataOffline(u);
+                        online = instance.getBubblePlayer(u);
                     } catch (Exception e) {
                         throw new CommandException("Player not found", this);
                     }
@@ -221,9 +219,6 @@ public class RankCommand extends BaseCommand {
                     throw new CommandException("Rank not found", this);
                 }
                 online.setRank(r);
-                if (forcesave) {
-                    online.save();
-                }
                 return TextComponent.fromLegacyText(ChatColor.GOLD + "Set the rank of \'" + online.getNickName() + "\' to \'" + r.getName() + "\'");
             }
         }).add(new SubCommand("addrank", "rankmanager.addsubrank", "addrank <player> <rank>", "addgroup") {
@@ -233,15 +228,13 @@ public class RankCommand extends BaseCommand {
                 }
                 String playername = args[0];
                 ProxiedBubblePlayer online = ProxiedBubblePlayer.getObject(playername);
-                boolean forcesave = false;
                 if (online == null) {
-                    forcesave = true;
                     UUID u = instance.getUUID(playername);
                     if (u == null) {
                         throw new CommandException("Player not found", this);
                     }
                     try {
-                        online = instance.getDataOffline(u);
+                        online = instance.getBubblePlayer(u);
                     } catch (Exception e) {
                         throw new CommandException("Player not found", this);
                     }
@@ -258,9 +251,6 @@ public class RankCommand extends BaseCommand {
                 }
                 rankList.add(r);
                 online.setSubRanks(rankList);
-                if (forcesave) {
-                    online.save();
-                }
                 return TextComponent.fromLegacyText(ChatColor.GOLD + "Added the subrank of \'" + online.getNickName() + "\' to \'" + r.getName() + "\'");
             }
         }).add(new SubCommand("removerank", "rankmanager.removesubrank", "removerank <player> <rank>", "removegroup") {
@@ -270,15 +260,13 @@ public class RankCommand extends BaseCommand {
                 }
                 String playername = args[0];
                 ProxiedBubblePlayer online = ProxiedBubblePlayer.getObject(playername);
-                boolean forcesave = false;
                 if (online == null) {
-                    forcesave = true;
                     UUID u = instance.getUUID(playername);
                     if (u == null) {
                         throw new CommandException("Player not found", this);
                     }
                     try {
-                        online = instance.getDataOffline(u);
+                        online = instance.getBubblePlayer(u);
                     } catch (Exception e) {
                         throw new CommandException("Player not found", this);
                     }
@@ -295,9 +283,6 @@ public class RankCommand extends BaseCommand {
                 }
                 rankList.remove(r);
                 online.setSubRanks(rankList);
-                if (forcesave) {
-                    online.save();
-                }
                 return TextComponent.fromLegacyText(ChatColor.GOLD + "Removed the subrank of \'" + online.getNickName() + "\' from \'" + r.getName() + "\'");
             }
         }).add(new SubCommand("deleterank", "rankmanager.deleterank", "deleterank <rank>", "deletegroup") {
@@ -315,7 +300,7 @@ public class RankCommand extends BaseCommand {
                     throw new CommandException("You may not delete the default rank", this);
                 }
                 Rank.getRanks().remove(r);
-                Rank fakerank = new Rank(r.getName(), new RankData(null));
+                Rank fakerank = new Rank(r.getName(), null);
                 instance.updateRank(fakerank);
                 r.getData().getRaw().clear();
                 try {
