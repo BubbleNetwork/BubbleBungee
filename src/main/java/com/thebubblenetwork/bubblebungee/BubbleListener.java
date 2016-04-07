@@ -96,6 +96,7 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
 
     @EventHandler
     public void onPlayerChat(ChatEvent e) {
+        //FIXME Messy
         if (e.getSender() instanceof ProxiedPlayer && !e.getMessage().startsWith("/")) {
             ProxiedPlayer proxiedPlayer = (ProxiedPlayer) e.getSender();
             ProxiedBubblePlayer proxiedBubblePlayer = ProxiedBubblePlayer.getObject(proxiedPlayer.getUniqueId());
@@ -103,7 +104,7 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
             Rank rank = proxiedBubblePlayer.getRank();
             BaseComponent[] prefix = TextComponent.fromLegacyText(rank.getPrefix());
 
-            withHover(prefix, new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(rank.getPrefix() + "\n\nName: " + ChatColor.GRAY + rank.getName() + (rank.isAuthorized("donator") ? "\n" + ChatColor.GOLD + "Donator" : "") + (rank.isAuthorized("staff") ? "\n" + ChatColor.RED + "Staff" : "") + (rank.isAuthorized("owner") ? "\n" + ChatColor.DARK_RED + "Owner" : "") + (rank.isDefault() ? "\n" + ChatColor.GRAY + "Default Rank" : ""))));
+            withHover(prefix, new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(rank.getPrefix() + ChatColor.RESET + "\n\nName: " + ChatColor.GRAY + rank.getName() + (rank.isAuthorized("donator") ? "\n" + ChatColor.GOLD + "Donator" : "") + (rank.isAuthorized("staff") ? "\n" + ChatColor.RED + "Staff" : "") + (rank.isAuthorized("owner") ? "\n" + ChatColor.DARK_RED + "Owner" : "") + (rank.isDefault() ? "\n" + ChatColor.GRAY + "Default Rank" : ""))));
 
             if (rank.isAuthorized("donator")) {
                 try {
@@ -133,7 +134,14 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
 
             TextComponent space = new TextComponent(" ");
 
-            BaseComponent[] fullmsg = new ImmutableList.Builder<BaseComponent>().add(prefix).add(space).add(name).add(suffix).add(space).add(message).build().toArray(new BaseComponent[0]);
+            BaseComponent[] fullmsg;
+            if(proxiedBubblePlayer.isSpectating()){
+                TextComponent spectating = new TextComponent("[SPEC]" );
+                spectating.setColor(ChatColor.GRAY);
+                spectating.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.GRAY + "This player is spectating")));
+                fullmsg = new ImmutableList.Builder<BaseComponent>().add(spectating).add(prefix).add(space).add(name).add(suffix).add(space).add(message).build().toArray(new BaseComponent[0]);
+            }
+            else fullmsg =  new ImmutableList.Builder<BaseComponent>().add(prefix).add(space).add(name).add(suffix).add(space).add(message).build().toArray(new BaseComponent[0]);
 
             for (ProxiedPlayer target : proxiedPlayer.getServer().getInfo().getPlayers()) {
                 target.sendMessage(ChatMessageType.CHAT, fullmsg);
@@ -225,6 +233,37 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
         ProxiedBubblePlayer player = (ProxiedBubblePlayer) ProxiedBubblePlayer.getPlayerObjectMap().remove(e.getPlayer().getUniqueId());
         player.setParty(null);
         player.finishChanges();
+        Rank rank = player.getRank();
+        BaseComponent[] prefix = TextComponent.fromLegacyText(rank.getPrefix() + ChatColor.RESET);
+        TextComponent name = new TextComponent(player.getNickName());
+        name.setColor(ChatColor.getByChar(getLastColor(TextComponent.toLegacyText(prefix))));
+        TextComponent space = new TextComponent(" ");
+        BaseComponent[] message = new ImmutableList.Builder<BaseComponent>().add(prefix).add(space).add(name).add(TextComponent.fromLegacyText(ChatColor.GRAY + " left the server")).build().toArray(new BaseComponent[0]);
+        ProxiedPlayer friend;
+        for(UUID u: player.getFriends()){
+            friend = getBungee().getPlugin().getProxy().getPlayer(u);
+            if(friend != null){
+                friend.sendMessage(ChatMessageType.ACTION_BAR, message);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPostJoin(PostLoginEvent e){
+        ProxiedBubblePlayer bubblePlayer = ProxiedBubblePlayer.getObject(e.getPlayer().getUniqueId());
+        Rank rank = bubblePlayer.getRank();
+        BaseComponent[] prefix = TextComponent.fromLegacyText(rank.getPrefix() + ChatColor.RESET);
+        TextComponent name = new TextComponent(bubblePlayer.getNickName());
+        name.setColor(ChatColor.getByChar(getLastColor(TextComponent.toLegacyText(prefix))));
+        TextComponent space = new TextComponent(" ");
+        BaseComponent[] message = new ImmutableList.Builder<BaseComponent>().add(prefix).add(space).add(name).add(TextComponent.fromLegacyText(ChatColor.GRAY + " joined the server")).build().toArray(new BaseComponent[0]);
+        ProxiedPlayer friend;
+        for(UUID u: bubblePlayer.getFriends()){
+            friend = getBungee().getPlugin().getProxy().getPlayer(u);
+            if(friend != null){
+                friend.sendMessage(ChatMessageType.ACTION_BAR, message);
+            }
+        }
     }
 
     @EventHandler
