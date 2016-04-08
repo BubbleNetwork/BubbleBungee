@@ -136,7 +136,7 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
 
             BaseComponent[] fullmsg;
             if(proxiedBubblePlayer.isSpectating()){
-                TextComponent spectating = new TextComponent("[SPEC]" );
+                TextComponent spectating = new TextComponent("[SPEC] ");
                 spectating.setColor(ChatColor.GRAY);
                 spectating.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.GRAY + "This player is spectating")));
                 fullmsg = new ImmutableList.Builder<BaseComponent>().add(spectating).add(prefix).add(space).add(name).add(suffix).add(space).add(message).build().toArray(new BaseComponent[0]);
