@@ -1,6 +1,7 @@
 package com.thebubblenetwork.bubblebungee.player;
 
 import com.sun.istack.internal.Nullable;
+import com.thebubblenetwork.api.global.bubblepackets.messaging.MessageType;
 import com.thebubblenetwork.api.global.data.InvalidBaseException;
 import com.thebubblenetwork.api.global.data.PlayerData;
 import com.thebubblenetwork.api.global.data.PunishmentData;
@@ -9,6 +10,7 @@ import com.thebubblenetwork.api.global.player.BubblePlayer;
 import com.thebubblenetwork.bubblebungee.BubbleBungee;
 import com.thebubblenetwork.bubblebungee.party.Party;
 import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -19,6 +21,8 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
+
+import static com.thebubblenetwork.bubblebungee.BubbleListener.BANMSG;
 
 /**
  * Copyright Statement
@@ -169,6 +173,9 @@ public class ProxiedBubblePlayer extends BubblePlayer<ProxiedPlayer>{
                 .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.RED + "Reason: " + ChatColor.GOLD + reason + "\n" + ChatColor.RED + "By: " + ChatColor.GOLD +  by + "\n" + ChatColor.RED + "Expires: " + ChatColor.GOLD + (unbanby == null ? "never" : DateUTIL.formatDateDiff(unbanby.getTime())))))
                 .create()
         );
+        if(isOnline()){
+            getPlayer().disconnect(TextComponent.fromLegacyText(String.format(BANMSG,reason,unbanby == null ? "never" : DateUTIL.formatDateDiff(unbanby.getTime()) ,by)));
+        }
     }
 
     public boolean isBanned(){
@@ -225,6 +232,9 @@ public class ProxiedBubblePlayer extends BubblePlayer<ProxiedPlayer>{
                 .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.RED + "Reason: " + ChatColor.GOLD + reason + "\n" + ChatColor.RED + "By: " + ChatColor.GOLD +  by + "\n" + ChatColor.RED + "Expires: " + ChatColor.GOLD + (unmuteby == null ? "never" : DateUTIL.formatDateDiff(unmuteby.getTime())))))
                 .create()
         );
+        if(isOnline()){
+            getPlayer().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(ChatColor.GOLD + "You were muted"));
+        }
     }
 
     public void unmute() {

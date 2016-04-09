@@ -14,6 +14,7 @@ import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.PlayerDataResponse;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.ServerListResponse;
 import com.thebubblenetwork.api.global.data.InvalidBaseException;
+import com.thebubblenetwork.api.global.java.DateUTIL;
 import com.thebubblenetwork.api.global.ranks.Rank;
 import com.thebubblenetwork.api.global.type.ServerType;
 import com.thebubblenetwork.bubblebungee.party.Party;
@@ -43,7 +44,7 @@ import java.util.logging.Level;
  * Created January 2016
  */
 public class BubbleListener implements Listener, PacketListener, ReconnectHandler {
-    public static final String BANMSG = ChatColor.RED + "You have been {0} from BubbleNetwork\n\nReason: " + ChatColor.WHITE + "{1}\n" + ChatColor.RED + "Expires: " + ChatColor.WHITE + "{2}\n" + ChatColor.RED + "{0} By: " + ChatColor.WHITE + "{3}\n\n" + ChatColor.RED + "You may appeal at thebubblenetwork.com";
+    public static final String BANMSG = ChatColor.RED + "You have been banned from BubbleNetwork\n\nReason: " + ChatColor.WHITE + "{0}\n" + ChatColor.RED + "Expires: " + ChatColor.WHITE + "{1}\n" + ChatColor.RED + "Banned By: " + ChatColor.WHITE + "{2}\n\n" + ChatColor.RED + "You may appeal at thebubblenetwork.com";
 
     private static final String spacer = "\n";
     private static final int MAXLIMIT = 5000;
@@ -94,6 +95,18 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
         if (e.getSender() instanceof ProxiedPlayer && !e.getMessage().startsWith("/")) {
             ProxiedPlayer proxiedPlayer = (ProxiedPlayer) e.getSender();
             ProxiedBubblePlayer proxiedBubblePlayer = ProxiedBubblePlayer.getObject(proxiedPlayer.getUniqueId());
+
+            if(proxiedBubblePlayer.isMuted()){
+                proxiedPlayer.sendMessage(new ComponentBuilder("[Mute] ")
+                        .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.RED + "This is a mute message")))
+                        .color(ChatColor.RED)
+                        .append("You are muted")
+                        .color(ChatColor.GOLD)
+                        .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.RED + "Reason: " + ChatColor.GOLD + proxiedBubblePlayer.getMuteReason() + "\n" + ChatColor.RED + "By: " + ChatColor.GOLD +  proxiedBubblePlayer.getMutedBy() + "\n" + ChatColor.RED + "Expires: " + ChatColor.GOLD + (proxiedBubblePlayer.getUnmuteDate() == null ? "never" : DateUTIL.formatDateDiff(proxiedBubblePlayer.getUnmuteDate().getTime())))))
+                        .create());
+                e.setCancelled(true);
+                return;
+            }
 
             Rank rank = proxiedBubblePlayer.getRank();
             BaseComponent[] prefix = TextComponent.fromLegacyText(rank.getPrefix());
@@ -180,28 +193,8 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
             data.setName(connection.getName());
             if(data.isBanned()){
                 e.setCancelled(true);
-                String bantimer;
-                if(data.getUnbanDate() != null) {
-                    bantimer = "";
-                    Date unbanby = new Date(data.getUnbanDate().getTime() - System.currentTimeMillis());
-                    if(unbanby.getYear() != 0){
-                        bantimer += unbanby.getYear() + " " + "year" + (unbanby.getYear() != 1 ? "s" : "") + " ";
-                    }
-                    if(unbanby.getMonth() != 0){
-                        bantimer += unbanby.getMonth() + " " + "month" + (unbanby.getMonth() != 1 ? "s" : "") + " ";
-                    }
-                    if(unbanby.getYear() != 0){
-                        bantimer += unbanby.getDay() + " " + "day" + (unbanby.getDay() != 1 ? "s" : "") + " ";
-                    }
-                    if(unbanby.getMinutes() != 0){
-                        bantimer += unbanby.getYear() + " " + "minute" + (unbanby.getMinutes() != 1 ? "s" : "") + " ";
-                    }
-                    if(unbanby.getYear() != 0){
-                        bantimer += unbanby.getSeconds() + " " + "second" + (unbanby.getSeconds() != 1 ? "s" : "") + " ";
-                    }
-                }
-                else bantimer = "never";
-                e.setCancelReason(String.format(BANMSG,"Banned",data.getBanReason(),bantimer,data.getBannedBy()));
+                String bantimer = data.getUnbanDate() == null ? "never" : DateUTIL.formatDateDiff(data.getUnbanDate().getTime());
+                e.setCancelReason(String.format(BANMSG,data.getBanReason(),bantimer,data.getBannedBy()));
             }
             else if (getBungee().isLockdown() && !data.isAuthorized("lockdown.bypass")) {
                 e.setCancelled(true);
