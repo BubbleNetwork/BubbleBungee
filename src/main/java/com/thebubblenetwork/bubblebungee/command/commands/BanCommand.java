@@ -45,13 +45,13 @@ public class BanCommand extends SimpleCommand{
             reason = "The ban hammer has spoken";
             date = null;
         }
-        else if(args.length == 2){
-            reason = args[1];
-            date = null;
-        }
         else{
             String endproduct = Joiner.on(" ").join(new ArgTrimmer<>(String.class, args).trim(1));
-            date = new Date(DateUTIL.parseDateDiff(endproduct, true));
+            try {
+                date = new Date(DateUTIL.parseDateDiff(endproduct, true));
+            } catch (Exception e) {
+                date = null;
+            }
             reason = DateUTIL.removeTimePattern(endproduct);
         }
         bubblePlayer.ban(date, reason, sender.getName());
