@@ -44,7 +44,7 @@ import java.util.logging.Level;
  * Created January 2016
  */
 public class BubbleListener implements Listener, PacketListener, ReconnectHandler {
-    public static final String BANMSG = ChatColor.RED + "You have been banned from BubbleNetwork\n\nReason: " + ChatColor.WHITE + "{0}\n" + ChatColor.RED + "Expires: " + ChatColor.WHITE + "{1}\n" + ChatColor.RED + "Banned By: " + ChatColor.WHITE + "{2}\n\n" + ChatColor.RED + "You may appeal at thebubblenetwork.com";
+    public static final String BANMSG = ChatColor.RED + "You have been banned from BubbleNetwork\n\nReason: " + ChatColor.WHITE + "%s\n" + ChatColor.RED + "Expires: " + ChatColor.WHITE + "%s\n" + ChatColor.RED + "Banned By: " + ChatColor.WHITE + "%s\n\n" + ChatColor.RED + "You may appeal at thebubblenetwork.com";
 
     private static final String spacer = "\n";
     private static final int MAXLIMIT = 5000;

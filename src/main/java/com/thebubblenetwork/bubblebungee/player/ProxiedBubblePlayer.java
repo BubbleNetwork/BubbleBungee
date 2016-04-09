@@ -120,6 +120,7 @@ public class ProxiedBubblePlayer extends BubblePlayer<ProxiedPlayer>{
     protected void save() {
         try {
             getData().save(PlayerData.table, "uuid", getUUID());
+            getPunishmentData().save(PunishmentData.table, "uuid", getUUID());
         } catch (SQLException | ClassNotFoundException e) {
             BubbleBungee.getInstance().logSevere(e.getMessage());
             BubbleBungee.getInstance().logSevere("Could not save data of " + getName());
@@ -143,20 +144,22 @@ public class ProxiedBubblePlayer extends BubblePlayer<ProxiedPlayer>{
         this.party = party;
     }
 
-    public void unban(){
+    public void unban(boolean silent){
         getPunishmentData().remove(PunishmentData.BANNED);
         getPunishmentData().remove(PunishmentData.BANTIME);
         getPunishmentData().remove(PunishmentData.BANREASON);
         getPunishmentData().remove(PunishmentData.BANBY);
         finishChanges();
-        ProxyServer.getInstance().broadcast(new ComponentBuilder("[Ban] ")
-                .color(ChatColor.RED)
-                .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.RED + "This is a ban message")))
-                .append(getNickName() + " was unbanned")
-                .color(ChatColor.GOLD)
-                .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.GOLD + "This player was unbanned")))
-                .create()
-        );
+        if(!silent) {
+            ProxyServer.getInstance().broadcast(new ComponentBuilder("[Ban] ")
+                    .color(ChatColor.RED)
+                    .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.RED + "This is a ban message")))
+                    .append(getNickName() + " was unbanned")
+                    .color(ChatColor.GOLD)
+                    .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.GOLD + "This player was unbanned")))
+                    .create()
+            );
+        }
     }
 
     public void ban(@Nullable Date unbanby, String reason, String by){
@@ -182,7 +185,7 @@ public class ProxiedBubblePlayer extends BubblePlayer<ProxiedPlayer>{
         try{
             if(getPunishmentData().getBoolean(PunishmentData.BANNED)){
                 if(getUnbanDate() != null && getUnbanDate().before(new Date())){
-                    unban();
+                    unban(true);
                 }
                 else return true;
             }
@@ -233,31 +236,46 @@ public class ProxiedBubblePlayer extends BubblePlayer<ProxiedPlayer>{
                 .create()
         );
         if(isOnline()){
-            getPlayer().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(ChatColor.GOLD + "You were muted"));
+            getPlayer().sendMessage(new ComponentBuilder("[Mute] ")
+                    .color(ChatColor.RED)
+                    .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.RED + "This is a mute message")))
+                    .append("You were muted")
+                    .color(ChatColor.GOLD)
+                    .create());
         }
     }
 
-    public void unmute() {
+    public void unmute(boolean silent) {
         getPunishmentData().remove(PunishmentData.MUTED);
         getPunishmentData().remove(PunishmentData.MUTETIME);
         getPunishmentData().remove(PunishmentData.MUTEREASON);
         getPunishmentData().remove(PunishmentData.MUTEBY);
         finishChanges();
-        ProxyServer.getInstance().broadcast(new ComponentBuilder("[Mute] ")
-                .color(ChatColor.RED)
-                .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.RED + "This is a mute message")))
-                .append(getNickName() + " was unmuted")
-                .color(ChatColor.GOLD)
-                .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.GOLD + "This player was unmuted")))
-                .create()
-        );
+        if(!silent) {
+            ProxyServer.getInstance().broadcast(new ComponentBuilder("[Mute] ")
+                    .color(ChatColor.RED)
+                    .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.RED + "This is a mute message")))
+                    .append(getNickName() + " was unmuted")
+                    .color(ChatColor.GOLD)
+                    .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.GOLD + "This player was unmuted")))
+                    .create()
+            );
+        }
+        if(isOnline()){
+            getPlayer().sendMessage(new ComponentBuilder("[Mute] ")
+                    .color(ChatColor.RED)
+                    .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.RED + "This is a mute message")))
+                    .append("You are no longer muted")
+                    .color(ChatColor.GOLD)
+                    .create());
+        }
     }
 
     public boolean isMuted() {
         try{
             if(getPunishmentData().getBoolean(PunishmentData.MUTED)){
                 if(getUnmuteDate() != null && getUnmuteDate().before(new Date())){
-                    unban();
+                    unmute(true);
                 }
                 else return true;
             }
