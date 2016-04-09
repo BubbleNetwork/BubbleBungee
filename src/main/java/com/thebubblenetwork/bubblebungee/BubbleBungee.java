@@ -138,7 +138,9 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
         registerCommand(new LockdownCommand());
         registerCommand(new RegisterCommand());
         registerCommand(new BanCommand());
+        registerCommand(new UnbanCommand());
         registerCommand(new MuteCommand());
+        registerCommand(new UnmuteCommand());
 
         logInfo("Commands have been created");
 
