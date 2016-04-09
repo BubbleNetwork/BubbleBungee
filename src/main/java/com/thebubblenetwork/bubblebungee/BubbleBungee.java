@@ -6,6 +6,7 @@ import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshak
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.PlayerDataResponse;
 import com.thebubblenetwork.api.global.data.DataObject;
 import com.thebubblenetwork.api.global.data.PlayerData;
+import com.thebubblenetwork.api.global.data.PunishmentData;
 import com.thebubblenetwork.api.global.data.RankData;
 import com.thebubblenetwork.api.global.file.PropertiesFile;
 import com.thebubblenetwork.api.global.player.BubblePlayer;
@@ -136,6 +137,8 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
         registerCommand(new HelpCommand());
         registerCommand(new LockdownCommand());
         registerCommand(new RegisterCommand());
+        registerCommand(new BanCommand());
+        registerCommand(new MuteCommand());
 
         logInfo("Commands have been created");
 
@@ -164,9 +167,16 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
         manager = null;
     }
 
+    public Map<String, String> loadPunishmentData(UUID load) throws SQLException, ClassNotFoundException{
+        return PunishmentData.loadData(SQLUtil.query(getConnection(), PunishmentData.table, "*", new SQLUtil.WhereVar("uuid", load)));
+    }
 
     private PlayerData loadData(UUID load) throws SQLException, ClassNotFoundException {
-        return new PlayerData(DataObject.loadData(SQLUtil.query(getConnection(), PlayerData.table, "*", new SQLUtil.WhereVar("uuid", load))));
+        return new PlayerData(loadDataRaw(load));
+    }
+
+    private Map<String, String> loadDataRaw(UUID load) throws SQLException, ClassNotFoundException{
+        return PlayerData.loadData(SQLUtil.query(getConnection(), PlayerData.table, "*", new SQLUtil.WhereVar("uuid", load)));
     }
 
     public ServerManager getManager() {
@@ -580,6 +590,6 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
             return ProxiedBubblePlayer.getObject(u);
         }
         //return a loaded instance
-        return new ProxiedBubblePlayer(u, loadData(u));
+        return new ProxiedBubblePlayer(u, loadDataRaw(u), new PunishmentData(loadPunishmentData(u)));
     }
 }

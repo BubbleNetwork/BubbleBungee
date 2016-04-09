@@ -14,7 +14,6 @@ import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.PlayerDataResponse;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.ServerListResponse;
 import com.thebubblenetwork.api.global.data.InvalidBaseException;
-import com.thebubblenetwork.api.global.data.PlayerData;
 import com.thebubblenetwork.api.global.ranks.Rank;
 import com.thebubblenetwork.api.global.type.ServerType;
 import com.thebubblenetwork.bubblebungee.party.Party;
@@ -32,12 +31,9 @@ import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 
 import java.io.IOException;
-import java.net.ConnectException;
-import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 /**
@@ -66,8 +62,6 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
     }
 
     public final DateFormat format = new SimpleDateFormat("hh:mm:ss");
-    private final String errormsg = ChatColor.RED + "An internal error has occurred please report this to @ExtendObject";
-    private Map<UUID, Runnable> toExecute = new HashMap<>();
     private BubbleBungee bungee;
     private String line1 = ChatColor.AQUA + ChatColor.BOLD.toString() + "BubbleNetwork" + spacer;
     private String line2 = ChatColor.BLUE + " Come and join the fun!";
@@ -487,21 +481,15 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
         }
     }
 
-    public void sendPacketSafe(final XServer server, final IPluginMessage message) {
-        final UUID u = UUID.randomUUID();
-        Runnable r = new Runnable() {
-            public void run() {
-                toExecute.remove(u);
-                try {
-                    getBungee().getPacketHub().sendMessage(server, message);
-                } catch (IOException e) {
-                    getBungee().logSevere(e.getMessage());
-                }
-            }
-        };
-        toExecute.put(u, r);
-        ProxyServer.getInstance().getScheduler().schedule(getBungee().getPlugin(), r, 1L, TimeUnit.MILLISECONDS);
+    public void sendPacketSafe(XServer server, IPluginMessage message) {
+        try {
+            getBungee().getPacketHub().sendMessage(server, message);
+        } catch (IOException e) {
+            getBungee().logSevere(e.getMessage());
+        }
     }
+
+    //Reconnecthandler implementation
 
     public ServerInfo getServer(ProxiedPlayer proxiedPlayer) {
         getBungee().getLogger().log(Level.INFO, "Finding a Lobby for " + proxiedPlayer.getName());
@@ -510,7 +498,6 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
             getBungee().getLogger().log(Level.INFO, "Sending {0} to {1}",new Object[]{proxiedPlayer.getName(), server.getName()});
             return server.getInfo();
         }
-
         proxiedPlayer.disconnect(TextComponent.fromLegacyText(ChatColor.RED + "Could not find a Lobby server for you"));
         throw new IllegalArgumentException("No Server found");
     }
