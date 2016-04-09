@@ -41,7 +41,7 @@ public class UnmuteCommand extends SimpleCommand{
                 throw new CommandException("Player not found", this);
             }
         }
-        if(!player.isBanned()) {
+        if(!player.isMuted()) {
             throw new CommandException("Player is not banned", this);
         }
         player.unmute(false);
