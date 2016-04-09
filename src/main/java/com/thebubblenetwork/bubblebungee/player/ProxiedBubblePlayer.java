@@ -8,6 +8,7 @@ import com.thebubblenetwork.api.global.data.PunishmentData;
 import com.thebubblenetwork.api.global.java.DateUTIL;
 import com.thebubblenetwork.api.global.player.BubblePlayer;
 import com.thebubblenetwork.bubblebungee.BubbleBungee;
+import com.thebubblenetwork.bubblebungee.command.commands.PartyCommand;
 import com.thebubblenetwork.bubblebungee.party.Party;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ChatMessageType;
@@ -133,12 +134,13 @@ public class ProxiedBubblePlayer extends BubblePlayer<ProxiedPlayer>{
 
     public void setParty(Party party) {
         if (this.party != null) {
-            if (this.party.isLeader(getPlayer())) {
-                this.party.disband(getNickName() + " disbanded the party");
-            } else if (this.party.isMember(getPlayer())) {
-                this.party.removeMember(getPlayer(), getNickName() + " left the party");
-            } else if (this.party.isInvited(getPlayer())) {
-                this.party.cancelInvite(getPlayer(), getNickName() + " denied the invite");
+            if (PartyCommand.isPartyBoolean(getPlayer(), this.party)) {
+                if(this.party.isLeader(getPlayer())) {
+                    this.party.disband(getNickName() + " disbanded the party");
+                }
+                else if (this.party.isMember(getPlayer())) {
+                    this.party.removeMember(getPlayer(), getNickName() + " left the party");
+                }
             }
         }
         this.party = party;
