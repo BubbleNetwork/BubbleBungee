@@ -68,7 +68,7 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
     private String line2 = ChatColor.BLUE + " Come and join the fun!";
     private List<String> sample = Arrays.asList(ChatColor.AQUA + ChatColor.UNDERLINE.toString() + "BubbleNetwork", "", ChatColor.BLUE + "Site " + ChatColor.GRAY + ChatColor.ITALIC.toString() + "thebubblenetwork.com",ChatColor.BLUE + "TeamSpeak " + ChatColor.GRAY + ChatColor.ITALIC.toString() + "ts.thebubblenetwork.com","",ChatColor.BLUE + "Follow us on twitter " + ChatColor.GRAY + "@bubblenetworkmc");
     private Map<UUID, ProxiedBubblePlayer> prequeed = new HashMap<>();
-    private List<UUID> beingsent = new ArrayList<>();
+    private List<UUID> beingsent = Collections.synchronizedList(new ArrayList<UUID>());
 
     public BubbleListener(BubbleBungee bungee) {
         this.bungee = bungee;
@@ -305,6 +305,12 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
             }
         }
     }
+
+    @EventHandler
+    public void onServerDisconnect(ServerDisconnectEvent e){
+        beingsent.remove(e.getPlayer().getUniqueId());
+    }
+
 
     @EventHandler
     public void onServerChange(ServerConnectedEvent e){
