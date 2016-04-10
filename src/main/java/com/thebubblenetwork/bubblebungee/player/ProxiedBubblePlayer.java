@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
 
 import static com.thebubblenetwork.bubblebungee.BubbleListener.BANMSG;
 
@@ -121,10 +122,12 @@ public class ProxiedBubblePlayer extends BubblePlayer<ProxiedPlayer>{
     protected void save() {
         try {
             getData().save(PlayerData.table, "uuid", getUUID());
-            getPunishmentData().save(PunishmentData.table, "uuid", getUUID());
-        } catch (SQLException | ClassNotFoundException e) {
-            BubbleBungee.getInstance().logSevere(e.getMessage());
-            BubbleBungee.getInstance().logSevere("Could not save data of " + getName());
+            //When first loaded punishment data is not set when saved because of supertype constructor
+            if(getPunishmentData() != null) {
+                getPunishmentData().save(PunishmentData.table, "uuid", getUUID());
+            }
+        } catch (Exception e) {
+            BubbleBungee.getInstance().getLogger().log(Level.WARNING, "Could not save data of " + getName(), e);
         }
     }
 

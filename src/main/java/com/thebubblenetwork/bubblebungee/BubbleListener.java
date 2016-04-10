@@ -187,7 +187,7 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
             } catch (Exception e1) {
                 e.setCancelled(true);
                 e.setCancelReason(ChatColor.RED + "Woops! " + e1.getClass().getName() + ": " + e1.getMessage());
-                getBungee().getLogger().log(Level.WARNING, "Failed to load PlayerData: " + connection.getName());
+                getBungee().getLogger().log(Level.WARNING, "Failed to load PlayerData: " + connection.getName(), e1);
                 return;
             }
             data.setName(connection.getName());
