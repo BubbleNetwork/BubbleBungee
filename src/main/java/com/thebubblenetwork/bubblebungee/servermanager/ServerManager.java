@@ -130,13 +130,17 @@ public class ServerManager implements Runnable{
 
 
     public int getNewID(ServerType type) {
-        int i = 0;
-        BubbleServer server;
-        do {
-            i++;
-            server = getServer(type, i);
-        } while (server != null);
-        return i;
+        Set<Integer> integerSet = new HashSet<>();
+        for(BubbleServer server:servers){
+            if(server.getType() == type){
+                integerSet.add(server.getId());
+            }
+        }
+        for(int i = 1;true;i ++){
+            if(!integerSet.contains(i)){
+                return i;
+            }
+        }
     }
 
     public ServerType getNeeded() throws UneededException {

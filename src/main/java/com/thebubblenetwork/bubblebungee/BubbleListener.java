@@ -68,6 +68,7 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
     private String line2 = ChatColor.BLUE + " Come and join the fun!";
     private List<String> sample = Arrays.asList(ChatColor.AQUA + ChatColor.UNDERLINE.toString() + "BubbleNetwork", "", ChatColor.BLUE + "Site " + ChatColor.GRAY + ChatColor.ITALIC.toString() + "thebubblenetwork.com",ChatColor.BLUE + "TeamSpeak " + ChatColor.GRAY + ChatColor.ITALIC.toString() + "ts.thebubblenetwork.com","",ChatColor.BLUE + "Follow us on twitter " + ChatColor.GRAY + "@bubblenetworkmc");
     private Map<UUID, ProxiedBubblePlayer> prequeed = new HashMap<>();
+    private List<UUID> beingsent = new ArrayList<>();
 
     public BubbleListener(BubbleBungee bungee) {
         this.bungee = bungee;
@@ -218,20 +219,25 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onQuit(PlayerDisconnectEvent e) {
         ProxiedBubblePlayer player = (ProxiedBubblePlayer) ProxiedBubblePlayer.getPlayerObjectMap().remove(e.getPlayer().getUniqueId());
-        player.setParty(null);
-        player.finishChanges();
-        Rank rank = player.getRank();
-        BaseComponent[] prefix = TextComponent.fromLegacyText(rank.getPrefix() + ChatColor.RESET);
-        TextComponent name = new TextComponent(player.getNickName());
-        name.setColor(ChatColor.getByChar(getLastColor(TextComponent.toLegacyText(prefix))));
-        TextComponent space = new TextComponent(" ");
-        BaseComponent[] message = new ImmutableList.Builder<BaseComponent>().add(prefix).add(space).add(name).add(TextComponent.fromLegacyText(ChatColor.GRAY + " left the server")).build().toArray(new BaseComponent[0]);
-        ProxiedPlayer friend;
-        for(UUID u: player.getFriends()){
-            friend = getBungee().getPlugin().getProxy().getPlayer(u);
-            if(friend != null){
-                friend.sendMessage(ChatMessageType.ACTION_BAR, message);
+        if(player != null) {
+            player.setParty(null);
+            player.finishChanges();
+            Rank rank = player.getRank();
+            BaseComponent[] prefix = TextComponent.fromLegacyText(rank.getPrefix() + ChatColor.RESET);
+            TextComponent name = new TextComponent(player.getNickName());
+            name.setColor(ChatColor.getByChar(getLastColor(TextComponent.toLegacyText(prefix))));
+            TextComponent space = new TextComponent(" ");
+            BaseComponent[] message = new ImmutableList.Builder<BaseComponent>().add(prefix).add(space).add(name).add(TextComponent.fromLegacyText(ChatColor.GRAY + " left the server")).build().toArray(new BaseComponent[0]);
+            ProxiedPlayer friend;
+            for (UUID u : player.getFriends()) {
+                friend = getBungee().getPlugin().getProxy().getPlayer(u);
+                if (friend != null) {
+                    friend.sendMessage(ChatMessageType.ACTION_BAR, message);
+                }
             }
+        }
+        else if(prequeed.containsKey(e.getPlayer().getUniqueId() )){
+            prequeed.remove(e.getPlayer().getUniqueId());
         }
     }
 
@@ -284,16 +290,31 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPreServerChange(ServerConnectEvent e) {
-        BubbleServer server = getBungee().getManager().getServer(e.getTarget().getName());
-        if(server != null){
-            e.setTarget(server.getInfo());
+        if(beingsent.contains(e.getPlayer().getUniqueId())){
+            e.getPlayer().sendMessage(TextComponent.fromLegacyText(ChatColor.RED + "You are already connecting to another server"));
+            e.setCancelled(true);
         }
-        else e.setCancelled(true);
+        else {
+            beingsent.add(e.getPlayer().getUniqueId());
+            BubbleServer server = getBungee().getManager().getServer(e.getTarget().getName());
+            if (server != null) {
+                e.setTarget(server.getInfo());
+            }
+            else{
+                e.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onServerChange(ServerConnectedEvent e){
+        beingsent.remove(e.getPlayer().getUniqueId());
     }
 
 
     @EventHandler
     public void onServerKick(ServerKickEvent e){
+        beingsent.remove(e.getPlayer().getUniqueId());
         BubbleServer lobbyServer = getLobby(e.getPlayer());
         if(lobbyServer != null) {
             e.setCancelServer(lobbyServer.getInfo());
@@ -328,7 +349,11 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
             }
         } else if (message instanceof AssignMessage) {
             AssignMessage assignMessage = (AssignMessage) message;
-            getBungee().getManager().create(info.getServer(), assignMessage.getWrapperType(), assignMessage.getId());
+            BubbleServer already = getBungee().getManager().getServer(info.getServer());
+            if(assignMessage.getWrapperType() != already.getType() || assignMessage.getId() != already.getId()){
+                already.remove();
+                getBungee().getManager().create(info.getServer(), assignMessage.getWrapperType(), assignMessage.getId());
+            }
             getBungee().logInfo("Created server " + info.getServer().getHost() + " to " + assignMessage.getWrapperType().getName() + String.valueOf(assignMessage.getId()));
             for (Rank r : Rank.getRanks()) {
                 sendPacketSafe(info.getServer(), new RankDataUpdate(r.getName(), r.getData().getRaw()));
@@ -461,6 +486,7 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
         int id = getBungee().getManager().getNewID(type);
         AssignMessage message = new AssignMessage(id, type);
         sendPacketSafe(info.getServer(), message);
+        getBungee().getManager().create(info.getServer(), type, id);
         getBungee().logInfo("Sending assign message to " + info.getServer().getHost());
     }
 
