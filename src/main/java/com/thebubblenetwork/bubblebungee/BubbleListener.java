@@ -15,6 +15,7 @@ import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.ServerListResponse;
 import com.thebubblenetwork.api.global.data.InvalidBaseException;
 import com.thebubblenetwork.api.global.java.DateUTIL;
+import com.thebubblenetwork.api.global.player.BubblePlayer;
 import com.thebubblenetwork.api.global.ranks.Rank;
 import com.thebubblenetwork.api.global.type.ServerType;
 import com.thebubblenetwork.bubblebungee.party.Party;
@@ -282,7 +283,7 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
             players.setMax(MAXLIMIT);
             description += line2;
         }
-        players.setSample(sample.toArray(new ServerPing.PlayerInfo[0]));
+        players.setSample(sample.toArray(new ServerPing.PlayerInfo[sample.size()]));
         ping.setDescription(line1 + description);
         ping.setPlayers(players);
         e.setResponse(ping);
@@ -356,7 +357,7 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
         } else if (message instanceof AssignMessage) {
             AssignMessage assignMessage = (AssignMessage) message;
             BubbleServer already = getBungee().getManager().getServer(info.getServer());
-            if(assignMessage.getWrapperType() != already.getType() || assignMessage.getId() != already.getId()){
+            if (assignMessage.getWrapperType() != already.getType() || assignMessage.getId() != already.getId()) {
                 already.remove();
                 getBungee().getManager().create(info.getServer(), assignMessage.getWrapperType(), assignMessage.getId());
             }
@@ -407,7 +408,7 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
                     getBungee().logSevere("Could not find bubbleserver " + request.getTo());
                 }
             } else {
-                getBungee().getLogger().log(Level.INFO,"Could not find player " + request.getName());
+                getBungee().getLogger().log(Level.INFO, "Could not find player " + request.getName());
             }
         } else if (message instanceof PlayerMoveTypeRequest) {
             PlayerMoveTypeRequest request = (PlayerMoveTypeRequest) message;
@@ -416,23 +417,22 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
                 ProxiedBubblePlayer bubblePlayer = ProxiedBubblePlayer.getObject(player.getUniqueId());
                 int i = 1;
                 Set<UUID> send = null;
-                if(request.getServerType() != ServerType.getType("Lobby")){
+                if (request.getServerType() != ServerType.getType("Lobby")) {
                     Party p = bubblePlayer.getParty();
-                    if(p != null && p.isMember(player)){
-                        if(p.isLeader(player)){
+                    if (p != null && p.isMember(player)) {
+                        if (p.isLeader(player)) {
                             i = p.getMembers().size();
                             send = p.getMembers();
                             send.remove(p.getLeader());
-                        }
-                        else {
+                        } else {
                             player.sendMessage(new ComponentBuilder("You need to be party leader to travel to another server").color(ChatColor.BLUE).create());
                             return;
                         }
                     }
                 }
-                BubbleServer server = getBungee().getManager().getAvailble(request.getServerType(),i, true, false);
+                BubbleServer server = getBungee().getManager().getAvailble(request.getServerType(), i, true, false);
                 if (server == null) {
-                    server = getBungee().getManager().getAvailble(request.getServerType(),i, true, false);
+                    server = getBungee().getManager().getAvailble(request.getServerType(), i, true, false);
                 }
 
                 if (server == null) {
@@ -446,7 +446,7 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
                         getBungee().logSevere("Couldn't find any server types for " + request.getServerType().getName());
                     }
                 } else {
-                    if(send != null) {
+                    if (send != null) {
                         for (UUID u : send) {
                             ProxiedPlayer other = getBungee().getPlugin().getProxy().getPlayer(u);
                             other.sendMessage(new ComponentBuilder("Connecting you to ").color(ChatColor.BLUE).append(server.getType().getName() + "-" + server.getId()).color(ChatColor.AQUA).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.BLUE + server.getType().getName() + "\nID: " + server.getId() + "\nOnline: " + server.getPlayercount() + "/" + server.getMaxplayercount()))).create());
@@ -463,21 +463,33 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
         } else if (message instanceof ServerListRequest) {
             ServerListRequest request = (ServerListRequest) message;
             if (request.getServertype() != null) {
-                Map<String, String> datamap = new HashMap<>();
+                List<ServerListResponse.EncapsulatedServer> serverList = new ArrayList<>();
                 for (BubbleServer server : getBungee().getManager().getServers()) {
                     if (request.getServertype() == server.getType()) {
-                        datamap.put(String.valueOf(server.getId()), String.valueOf(server.getPlayercount()));
+                        serverList.add(ServerListResponse.createServer(server.getId(), server.getPlayercount(), server.isJoinable()));
                     }
                 }
-                sendPacketSafe(info.getServer(), new ServerListResponse(datamap, request.getServertype()));
+                sendPacketSafe(info.getServer(), new ServerListResponse(request.getServertype(), serverList));
             } else {
                 getBungee().logSevere("Could not find servertype for request");
             }
-        } else if(message instanceof AntiCheatViolationMessage){
-            AntiCheatViolationMessage antiCheatViolationMessage = (AntiCheatViolationMessage)message;
-
-        } else {
-            getBungee().logSevere("Could not accept packet - " + message.getType().getName());
+        } else if (message instanceof AntiCheatViolationMessage) {
+            AntiCheatViolationMessage antiCheatViolationMessage = (AntiCheatViolationMessage) message;
+            ProxiedBubblePlayer target = ProxiedBubblePlayer.getObject(antiCheatViolationMessage.getName());
+            if (target != null) {
+                HoverEvent clickme = new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.DARK_AQUA + "Click to join their game"));
+                ClickEvent clickEvent = new ClickEvent(ClickEvent.Action.RUN_COMMAND, "server " + target.getPlayer().getServer().getInfo().getName());
+                BaseComponent[] components = new ComponentBuilder("[VAC] ").event(clickEvent).event(clickme).color(ChatColor.BLUE).append(target.getNickName() + " was picked up using " + antiCheatViolationMessage.getViolationWrapper().getViolation() + " VL" + antiCheatViolationMessage.getViolationWrapper().getTotalVL() + " (+" + antiCheatViolationMessage.getViolationWrapper().getAddedVL() + ")").event(clickEvent).event(clickme).create();
+                for (BubblePlayer bubblePlayer : ProxiedBubblePlayer.getPlayerObjectMap().values()) {
+                    if (bubblePlayer.getPlayer() != null && bubblePlayer.isAuthorized("staff")) {
+                        ProxiedPlayer player = (ProxiedPlayer) bubblePlayer.getPlayer();
+                        player.sendMessage(ChatMessageType.CHAT, components);
+                        player.sendMessage(ChatMessageType.ACTION_BAR, components);
+                    }
+                }
+            } else {
+                getBungee().logSevere("Could not accept packet - " + message.getType().getName());
+            }
         }
     }
 
@@ -537,4 +549,5 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
     public void close() {
 
     }
+
 }

@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshake.RankDataUpdate;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.PlayerDataResponse;
-import com.thebubblenetwork.api.global.data.DataObject;
 import com.thebubblenetwork.api.global.data.PlayerData;
 import com.thebubblenetwork.api.global.data.PunishmentData;
 import com.thebubblenetwork.api.global.data.RankData;
@@ -12,7 +11,6 @@ import com.thebubblenetwork.api.global.file.PropertiesFile;
 import com.thebubblenetwork.api.global.player.BubblePlayer;
 import com.thebubblenetwork.api.global.plugin.BubbleHub;
 import com.thebubblenetwork.api.global.ranks.Rank;
-import com.thebubblenetwork.api.global.sql.SQLConnection;
 import com.thebubblenetwork.api.global.sql.SQLUtil;
 import com.thebubblenetwork.bubblebungee.command.ICommand;
 import com.thebubblenetwork.bubblebungee.command.commands.*;
@@ -22,7 +20,6 @@ import com.thebubblenetwork.bubblebungee.servermanager.ServerManager;
 import de.mickare.xserver.XServerPlugin;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.ReconnectHandler;
 import net.md_5.bungee.api.config.ConfigurationAdapter;
 import net.md_5.bungee.api.config.ListenerInfo;
 import net.md_5.bungee.api.config.ServerInfo;
@@ -35,7 +32,6 @@ import net.md_5.bungee.config.YamlConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -119,6 +115,7 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
 
         manager = new ServerManager(this);
         getPacketHub().registerListener(listener);
+
         getPlugin().getProxy().getPluginManager().registerListener(getPlugin(), listener);
 
         logInfo("Components are set up");
@@ -165,6 +162,7 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
                 getLogger().log(Level.WARNING,"Error saving rank " + r.getName(),e);
             }
         }
+
         setInstance(null);
         manager = null;
     }
