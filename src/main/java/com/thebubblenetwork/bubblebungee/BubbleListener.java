@@ -403,7 +403,7 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
                 BubbleServer server = getBungee().getManager().getServer(request.getTo());
                 if (server != null) {
                     player.connect(server.getInfo());
-                    player.sendMessage(new ComponentBuilder("Sending you to ").color(ChatColor.RED).append(server.getType().getName() + "-" + server.getId()).color(ChatColor.YELLOW).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.GRAY + server.getType().getName() + "\nID: " + server.getId() + "\nOnline: " + server.getPlayercount() + "/" + server.getMaxplayercount()))).create());
+                    player.sendMessage(new ComponentBuilder("Sending you to ").color(ChatColor.BLUE).append(server.getType().getName() + "-" + server.getId()).color(ChatColor.AQUA).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.GRAY + server.getType().getName() + "\nID: " + server.getId() + "\nOnline: " + server.getPlayercount() + "/" + server.getMaxplayercount()))).create());
                 } else {
                     getBungee().logSevere("Could not find bubbleserver " + request.getTo());
                 }
