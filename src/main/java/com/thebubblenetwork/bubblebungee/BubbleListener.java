@@ -265,7 +265,6 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
         PendingConnection connection = e.getConnection();
         ServerPing ping = e.getResponse();
         ServerPing.Players players = ping.getPlayers();
-        ping.setVersion(new ServerPing.Protocol("Please use 1.8", 47));
         List<ServerPing.PlayerInfo> sample = new ArrayList<>();
         for (String s : this.sample) {
             sample.add(new ServerPing.PlayerInfo(s, s));
@@ -280,6 +279,7 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
             description += ChatColor.RED + "Donate to join when full";
             ping.setVersion(new ServerPing.Protocol("Server Full", -1));
         } else {
+            ping.setVersion(new ServerPing.Protocol("BubbleNetwork", connection.getVersion()));
             players.setMax(MAXLIMIT);
             description += line2;
         }
