@@ -1,6 +1,7 @@
 package com.thebubblenetwork.bubblebungee.servermanager;
 
 import com.thebubblenetwork.api.global.bubblepackets.PacketInfo;
+import com.thebubblenetwork.api.global.plugin.BubbleHub;
 import com.thebubblenetwork.api.global.type.ServerType;
 import com.thebubblenetwork.bubblebungee.BubbleBungee;
 import de.mickare.xserver.net.XServer;
@@ -8,6 +9,7 @@ import io.netty.util.internal.ConcurrentSet;
 import net.md_5.bungee.api.Callback;
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.config.ServerInfo;
+import net.md_5.bungee.api.connection.Server;
 
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -116,13 +118,27 @@ public class ServerManager implements Runnable{
         servers.remove(server);
     }
 
-    public BubbleServer getAvailble(ServerType type,int needed, boolean joinable, boolean playercount) {
+    public BubbleServer getAvailble(ServerType type,int needed,boolean shuffle, boolean joinable, boolean playercount) {
         if (type == null) {
             throw new IllegalArgumentException("Type cannot be null");
         }
-        for (BubbleServer server : getServers()) {
-            if (server.getType() != null && type.getName().equals(server.getType().getName()) && (!joinable || server.isJoinable()) && (!playercount || server.getPlayercount() + needed <= server.getMaxplayercount())) {
-                return server;
+        if(shuffle){
+            List<BubbleServer> servers = new ArrayList<>();
+            for (BubbleServer server : getServers()) {
+                if (server.getType() != null && type == server.getType() && (!joinable || server.isJoinable()) && (!playercount || server.getPlayercount() + needed <= server.getMaxplayercount())) {
+                    servers.add(server);
+                }
+            }
+            if(!servers.isEmpty()){
+                Collections.shuffle(servers);
+                return servers.get(0);
+            }
+        }
+        else {
+            for (BubbleServer server : getServers()) {
+                if (server.getType() != null && type == server.getType() && (!joinable || server.isJoinable()) && (!playercount || server.getPlayercount() + needed <= server.getMaxplayercount())) {
+                    return server;
+                }
             }
         }
         return null;

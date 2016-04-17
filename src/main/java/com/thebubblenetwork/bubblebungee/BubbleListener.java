@@ -334,9 +334,9 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
         if (LOBBY == null) {
             throw new IllegalArgumentException("Lobby type doesn't exist");
         }
-        BubbleServer server = getBungee().getManager().getAvailble(LOBBY,1, true, true);
+        BubbleServer server = getBungee().getManager().getAvailble(LOBBY,1,true, true, true);
         if (server == null) {
-            server = getBungee().getManager().getAvailble(LOBBY,1, true, false);
+            server = getBungee().getManager().getAvailble(LOBBY,1, false, true, false);
         }
         return server;
     }
@@ -430,9 +430,9 @@ public class BubbleListener implements Listener, PacketListener, ReconnectHandle
                         }
                     }
                 }
-                BubbleServer server = getBungee().getManager().getAvailble(request.getServerType(), i, true, false);
+                BubbleServer server = getBungee().getManager().getAvailble(request.getServerType(), i,(request.getType().getName().equals("Lobby")), true, false);
                 if (server == null) {
-                    server = getBungee().getManager().getAvailble(request.getServerType(), i, true, false);
+                    server = getBungee().getManager().getAvailble(request.getServerType(), i,false, true, false);
                 }
 
                 if (server == null) {
