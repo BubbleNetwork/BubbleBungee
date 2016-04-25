@@ -225,6 +225,6 @@ public class FriendCommand extends BaseCommand {
                 online.setFriends(targetfriends);
                 return TextComponent.fromLegacyText(ChatColor.GOLD + "You are no longer friends with " + online.getNickName());
             }
-        }).build(), "friends");
+        }).build(), "friends","friendrequest","addfriend","buddy","friendrq","requestfriend");
     }
 }

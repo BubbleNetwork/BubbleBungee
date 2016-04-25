@@ -31,5 +31,6 @@ public class LobbyCommand extends SimpleCommand{
 
         }
         else throw new CommandException("Must be a player to do this", this);
+        return null;
     }
 }

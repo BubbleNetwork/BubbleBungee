@@ -2,6 +2,7 @@ package com.thebubblenetwork.bubblebungee.player;
 
 import com.sun.istack.internal.Nullable;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.MessageType;
+import com.thebubblenetwork.api.global.data.FriendsData;
 import com.thebubblenetwork.api.global.data.InvalidBaseException;
 import com.thebubblenetwork.api.global.data.PlayerData;
 import com.thebubblenetwork.api.global.data.PunishmentData;
@@ -19,6 +20,7 @@ import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
@@ -76,18 +78,20 @@ public class ProxiedBubblePlayer extends BubblePlayer<ProxiedPlayer>{
     private String name;
     private Party party = null;
     private PunishmentData punishmentData;
+    private FriendsData friendsData;
 
     public PunishmentData getPunishmentData() {
         return punishmentData;
     }
 
-    public ProxiedBubblePlayer(UUID u, PlayerData data, PunishmentData punishmentData) {
-        this(u, data.getRaw(), punishmentData);
+    public ProxiedBubblePlayer(UUID u, PlayerData data, PunishmentData punishmentData, FriendsData friendsData) {
+        this(u, data.getRaw(), punishmentData, friendsData);
     }
 
-    public ProxiedBubblePlayer(UUID u, Map<String, String> data, PunishmentData punishmentData){
+    public ProxiedBubblePlayer(UUID u, Map<String, String> data, PunishmentData punishmentData, FriendsData friendsData){
         super(u, data);
         this.punishmentData = punishmentData;
+        this.friendsData = friendsData;
     }
 
     public String getName() {
@@ -126,6 +130,10 @@ public class ProxiedBubblePlayer extends BubblePlayer<ProxiedPlayer>{
             if(getPunishmentData() != null) {
                 getPunishmentData().save(PunishmentData.table, "uuid", getUUID());
             }
+            //When first loaded friends data is not set when saved because of supertype constructor
+            if (getFriendsData() != null) {
+                getFriendsData().save(FriendsData.table, "uuid", getUUID());
+            }
         } catch (Exception e) {
             BubbleBungee.getInstance().getLogger().log(Level.WARNING, "Could not save data of " + getName(), e);
         }
@@ -137,7 +145,7 @@ public class ProxiedBubblePlayer extends BubblePlayer<ProxiedPlayer>{
 
     public void setParty(Party party) {
         if (this.party != null) {
-            if (PartyCommand.isPartyBoolean(getPlayer(), this.party)) {
+            if (this.party.isMember(getPlayer())  ) {
                 if(this.party.isLeader(getPlayer())) {
                     this.party.disband(getNickName() + " disbanded the party");
                 }
@@ -316,10 +324,53 @@ public class ProxiedBubblePlayer extends BubblePlayer<ProxiedPlayer>{
         }
     }
 
-    public void setPunishmentData(Map<String, String> rawPunishmentData) {
-        getPunishmentData().getRaw().clear();
-        for (Map.Entry<String, String> e : rawPunishmentData.entrySet()) {
-            getPunishmentData().getRaw().put(e.getKey(), e.getValue());
+    public UUID[] getFriends(){
+        try{
+            return getFriendsData().getUUIDList(FriendsData.CURRENT);
         }
+        catch (InvalidBaseException ex){
+            return new UUID[0];
+        }
+    }
+
+    public UUID[] getFriendIncomingRequests(){
+        return getFriendRequests();
+    }
+
+    public UUID[] getFriendRequests(){
+        try{
+            return getFriendsData().getUUIDList(FriendsData.INVITE);
+        }
+        catch (InvalidBaseException ex){
+            return new UUID[0];
+        }
+    }
+
+    public void setFriends(UUID... uuid){
+        setFriends(Arrays.asList(uuid));
+    }
+
+    public void setFriends(Iterable<UUID> uuid){
+        friendsData.setList(FriendsData.CURRENT, FriendsData.toStrings(uuid));
+    }
+
+    public void setFriendsIncomingRequests(UUID... uuid){
+        setFriendsRequests(uuid);
+    }
+
+    public void setFriendsIncomingRequests(Iterable<UUID> uuid){
+        setFriendsRequests(uuid);
+    }
+
+    public void setFriendsRequests(UUID... uuid){
+        setFriendsRequests(Arrays.asList(uuid));
+    }
+
+    public void setFriendsRequests(Iterable<UUID> uuid){
+        friendsData.setList(FriendsData.INVITE, FriendsData.toStrings(uuid));
+    }
+
+    public FriendsData getFriendsData() {
+        return friendsData;
     }
 }

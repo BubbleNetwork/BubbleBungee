@@ -18,7 +18,7 @@ import java.util.UUID;
 public class MuteCommand extends SimpleCommand{
     private static BubbleBungee instance = BubbleBungee.getInstance();
     public MuteCommand() {
-        super("mute", "muteommand.use", "/mute <player> [reason] [time]");
+        super("mute", "mutecommand.use", "/mute <player> [reason] [time]");
     }
 
     public BaseComponent[] Iexecute(CommandSender sender, String[] args) throws CommandException {

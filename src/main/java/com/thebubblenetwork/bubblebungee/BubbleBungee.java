@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.handshake.RankDataUpdate;
 import com.thebubblenetwork.api.global.bubblepackets.messaging.messages.response.PlayerDataResponse;
+import com.thebubblenetwork.api.global.data.FriendsData;
 import com.thebubblenetwork.api.global.data.PlayerData;
 import com.thebubblenetwork.api.global.data.PunishmentData;
 import com.thebubblenetwork.api.global.data.RankData;
@@ -94,7 +95,7 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
         try {
             loadPlayerDataTable();
         } catch (Exception e) {
-            getLogger().log(Level.WARNING,"Could not load PlayerData table",e);
+            getLogger().log(Level.WARNING,"Could not load PlayerData table" ,e);
             endSetup("Failed to load PlayerData table...");
         }
 
@@ -105,8 +106,19 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
         try {
             loadPunishmentsTable();
         } catch (Exception e) {
-            getLogger().log(Level.WARNING, "Could not load Punishments table", e);
+            getLogger().log(Level.WARNING, "Could not load Punishments table ", e);
             endSetup("Failed to load Punishments table...");
+        }
+
+        logInfo("Loaded Punishments table");
+
+        logInfo("loading Friends table...");
+
+        try {
+            loadFriendsTable();
+        } catch (Exception e) {
+            getLogger().log(Level.WARNING, "Could not load Friends table ", e);
+            endSetup("Failed to load Friends table...");
         }
 
         logInfo("Loaded Punishments table");
@@ -169,6 +181,10 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
 
     public Map<String, String> loadPunishmentData(UUID load) throws SQLException, ClassNotFoundException{
         return PunishmentData.loadData(SQLUtil.query(getConnection(), PunishmentData.table, "*", new SQLUtil.WhereVar("uuid", load)));
+    }
+
+    public Map<String, String> loadFriendData(UUID load) throws SQLException, ClassNotFoundException{
+        return FriendsData.loadData(SQLUtil.query(getConnection(), FriendsData.table, "*", new SQLUtil.WhereVar("uuid", load)));
     }
 
     private PlayerData loadData(UUID load) throws SQLException, ClassNotFoundException {
@@ -342,9 +358,9 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
             getLogger().log(Level.INFO, "PlayerData table does not exist, creating...");
             getConnection().executeSQL(
                     "CREATE TABLE `playerdata` (" +
-                    "`uuid` VARCHAR(36) NOT NULL," +
+                    "`uuid` CHAR(36) NOT NULL," +
+                    "`key` VARCHAR(50) NOT NULL," +
                     "`value` TEXT NOT NULL," +
-                    "`key` TEXT NOT NULL," +
                     "INDEX `UUID KEY` (`uuid`)," +
                     ");");
 
@@ -361,14 +377,35 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
             //create the punishments table
             getConnection().executeSQL(
                     "CREATE TABLE `punishments` (" +
-                    "`uuid` VARCHAR(36) NOT NULL," +
-                    "`value` TEXT NOT NULL," +
+                    "`uuid` CHAR(36) NOT NULL," +
                     "`key` TEXT NOT NULL," +
+                    "`value` TEXT NOT NULL," +
                     "INDEX `UUID KEY` (`uuid`)," +
                     ");");
 
             //log successful createion
             getLogger().log(Level.INFO, "Punishments table created successfully!");
+
+        }
+
+    }
+
+    public void loadFriendsTable() throws SQLException, ClassNotFoundException {
+
+        //check if the punishments table exists
+        if (!SQLUtil.tableExists(getConnection(), FriendsData.table)) {
+
+            //create the punishments table
+            getConnection().executeSQL(
+                    "CREATE TABLE `" + FriendsData.table + "` (" +
+                            "`uuid` CHAR(36) NOT NULL," +
+                            "`key` VARCHAR(30) NOT NULL," +
+                            "`value` VARCHAR(1000) NOT NULL," +
+                            "INDEX `UUID KEY` (`uuid`)," +
+                            ");");
+
+            //log successful createion
+            getLogger().log(Level.INFO, "Friends table created successfully!");
 
         }
 
@@ -590,6 +627,6 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
             return ProxiedBubblePlayer.getObject(u);
         }
         //return a loaded instance
-        return new ProxiedBubblePlayer(u, loadDataRaw(u), new PunishmentData(loadPunishmentData(u)));
+        return new ProxiedBubblePlayer(u, loadDataRaw(u), new PunishmentData(loadPunishmentData(u)), new FriendsData(loadFriendData(u)));
     }
 }
