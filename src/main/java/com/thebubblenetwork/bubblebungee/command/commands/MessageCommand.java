@@ -41,10 +41,16 @@ public class MessageCommand extends SimpleCommand {
         TextComponent space = new TextComponent(" ");
         TextComponent senderprefix = new TextComponent("[You -> " + player.getNickName() + "]");
         String name = sender.getName();
+        String ranks;
         if (sender instanceof ProxiedPlayer) {
             ProxiedBubblePlayer senderplayer = ProxiedBubblePlayer.getObject(((ProxiedPlayer) sender).getUniqueId());
             name = senderplayer.getNickName();
+            ranks = senderplayer.getRank().getName();
+            for(Rank r: senderplayer.getSubRanks()){
+                ranks += ", " + r.getName();
+            }
         }
+        else ranks = "Root Administrator";
         TextComponent playerprefix = new TextComponent("[" + name + " -> You]");
         playerprefix.setColor(ChatColor.GOLD);
         senderprefix.setColor(ChatColor.GOLD);
@@ -54,13 +60,7 @@ public class MessageCommand extends SimpleCommand {
         playerprefix.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/msg " + name + " "));
         senderprefix.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/msg " + player.getNickName() + " "));
 
-
-        String ranks = player.getRank().getName();
-        for (Rank r : player.getSubRanks()) {
-            ranks += ", " + r.getName();
-        }
-
-        HoverEvent sendermessageinfo = new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText("Name: " + ChatColor.GRAY + player.getName() +
+        HoverEvent sendermessageinfo = new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText("Name: " + ChatColor.GRAY + name +
                 "\nSent at " + ChatColor.GRAY + BubbleBungee.getInstance().getListener().format.format(new Date()) +
                 "\nRank: " + ChatColor.GRAY + ranks));
         TextComponent messagetext = new TextComponent(message);
@@ -68,6 +68,11 @@ public class MessageCommand extends SimpleCommand {
 
         if (player.getPlayer() != null) {
             player.getPlayer().sendMessage(playerprefix, space, messagetext);
+        }
+
+        ReplyCommand.REPLYMAP.put(sender.getName(), player.getName());
+        if (!ReplyCommand.REPLYMAP.containsKey(player.getName())){
+            ReplyCommand.REPLYMAP.put(player.getName(), sender.getName());
         }
         return new BaseComponent[]{senderprefix, space, messagetext};
     }
