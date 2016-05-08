@@ -65,7 +65,7 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
     private P plugin;
     private BungeePlugman pluginManager;
     private File file;
-    private boolean lockdown = true;
+    private boolean lockdown = false;
     private String lockdownmsg = ChatColor.RED + "The server is currently locked down";
     private PropertiesFile bungeeeproperties;
 
@@ -150,6 +150,7 @@ public class BubbleBungee extends BubbleHub<Plugin> implements ConfigurationAdap
         registerCommand(new UnbanCommand());
         registerCommand(new MuteCommand());
         registerCommand(new UnmuteCommand());
+        registerCommand(new ReplyCommand());
 
         logInfo("Commands have been created");
 
